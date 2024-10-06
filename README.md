@@ -28,15 +28,15 @@ Chatapult/
 
 ### Main Components
 
-- **services/frontend**: A Next.js application that serves as the user interface for Chatapult.
-- **services/api-gateway**: Acts as the main entry point for all incoming requests and forwards them to appropriate backend services.
-- **services/auth-service**: Handles authentication and authorization for the application.
-- **services/database-service**: Responsible for managing and interacting with the application's database.
-- **services/ai-inference-service**: Provides AI/ML capabilities by handling model inference and predictions.
-- **nginx**: Configured as a reverse proxy to handle traffic distribution among the microservices.
-- **shared**: Contains reusable utilities and constants that are shared across multiple services.
-- **scripts**: Shell scripts for automating build, deployment, and other tasks.
-- **docs**: Documentation for the application, including architectural overviews and API specifications.
+- `services/frontend`: A Next.js application that serves as the user interface for Chatapult.
+- `services/api-gateway`: Routes incoming requests to the correct backend services.
+- `services/auth-service`: Handles authentication and authorization for the application.
+- `services/database-service`: Responsible for managing and interacting with the application's database.
+- `services/ai-inference-service`: Provides AI/ML capabilities by handling model inference and predictions.
+- `nginx`: Configured as a reverse proxy to handle traffic distribution among the microservices.
+- `shared`: Contains reusable utilities and constants that are shared across multiple services.
+- `scripts`: Shell scripts for automating build, deployment, and other tasks.
+- `docs`: Documentation for the application, including architectural overviews and API specifications.
 
 ## Setup & Installation
 
