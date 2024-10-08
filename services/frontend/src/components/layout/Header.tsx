@@ -35,11 +35,11 @@ const Header: React.FC = () => {
                 <Image
                   src="/assets/images/logo.svg"
                   alt="Logo"
-                  className="indigo-700 dark:indigo-500 color-transition"
+                  className="indigo-700 dark:indigo-500"
                   width={75}
                   height={75}
                 />
-                <span className="font-bold text-3xl text-gray-800 dark:text-white color-transition">
+                <span className="font-bold text-3xl text-gray-800 dark:text-white">
                   Chatapult
                 </span>
               </span>
@@ -48,12 +48,23 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex md:space-x-8">
+            <Link href="/">
+              <span
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive("/")
+                    ? "border-indigo-700 text-gray-900 dark:text-gray-100 dark:border-indigo-500"
+                    : "border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-white"
+                }`}
+              >
+                Home
+              </span>
+            </Link>
             <Link href="/dashboard">
               <span
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                   isActive("/dashboard")
-                    ? "border-indigo-500 text-gray-900"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    ? "border-indigo-700 text-gray-900 dark:text-gray-100 dark:border-indigo-500"
+                    : "border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-white"
                 }`}
               >
                 Dashboard
@@ -74,7 +85,7 @@ const Header: React.FC = () => {
             ) : (
               <>
                 <Link href="/login">
-                  <span className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+                  <span className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-100 dark:bg-transparent dark:hover:bg-gray-700">
                     Login
                   </span>
                 </Link>
