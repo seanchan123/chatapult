@@ -1,15 +1,16 @@
 // src/components/layout/Header.tsx
-'use client';
+"use client";
 
-import React, { useState, useContext } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { AuthContext } from '@/contexts/AuthContext';
-import ThemeToggle from '@/common/ThemeToggle';
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import React, { useState, useContext } from "react";
+
+import ThemeToggle from "@/common/ThemeToggle";
+import { AuthContext } from "@/contexts/AuthContext";
 
 const Header: React.FC = () => {
-    const pathname = usePathname();
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, logout } = useContext(AuthContext);
 
@@ -31,8 +32,16 @@ const Header: React.FC = () => {
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" aria-label="Home">
               <span className="flex items-center">
-                <Image src="/assets/images/logo.svg" alt="Logo" className="indigo-700 dark:indigo-500 color-transition" width={75} height={75} />
-                <span className="font-bold text-3xl text-gray-800 dark:text-white color-transition">Chatapult</span>
+                <Image
+                  src="/assets/images/logo.svg"
+                  alt="Logo"
+                  className="indigo-700 dark:indigo-500 color-transition"
+                  width={75}
+                  height={75}
+                />
+                <span className="font-bold text-3xl text-gray-800 dark:text-white color-transition">
+                  Chatapult
+                </span>
               </span>
             </Link>
           </div>
@@ -42,9 +51,9 @@ const Header: React.FC = () => {
             <Link href="/dashboard">
               <span
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/dashboard')
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  isActive("/dashboard")
+                    ? "border-indigo-500 text-gray-900"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
                 }`}
               >
                 Dashboard
@@ -98,7 +107,12 @@ const Header: React.FC = () => {
                   stroke="currentColor"
                   aria-hidden="true"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               ) : (
                 // Icon when menu is open. Heroicon name: x
@@ -110,7 +124,12 @@ const Header: React.FC = () => {
                   stroke="currentColor"
                   aria-hidden="true"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               )}
             </button>
@@ -120,54 +139,21 @@ const Header: React.FC = () => {
 
       {/* Mobile Navigation Menu */}
       {isMenuOpen && (
-        <div className="md:hidden transition-all duration-300 ease-in-out" id="mobile-menu">
+        <div
+          className="md:hidden transition-all duration-300 ease-in-out"
+          id="mobile-menu"
+        >
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link href="/dashboard">
               <span
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  isActive('/dashboard')
-                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+                  isActive("/dashboard")
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Dashboard
-              </span>
-            </Link>
-            <Link href="/ai-assistant">
-              <span
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  isActive('/ai-assistant')
-                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                AI Assistant
-              </span>
-            </Link>
-            <Link href="/assessments">
-              <span
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  isActive('/assessments')
-                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Assessments
-              </span>
-            </Link>
-            <Link href="/progress">
-              <span
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  isActive('/progress')
-                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Progress
               </span>
             </Link>
           </div>
