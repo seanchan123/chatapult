@@ -4,6 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global Styles */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -16,16 +17,16 @@
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Roboto', Arial, Helvetica, sans-serif;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Roboto', Arial, Helvetica, sans-serif;
 }
 
 .color-transition {
