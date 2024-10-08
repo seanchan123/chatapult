@@ -155,12 +155,24 @@ const Header: React.FC = () => {
           id="mobile-menu"
         >
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <Link href="/">
+              <span
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  isActive("/")
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700 dark:bg-indigo-500 dark:border-indigo-500 dark:text-indigo-50"
+                    : "text-gray-600 dark:text-white"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Home
+              </span>
+            </Link>
             <Link href="/dashboard">
               <span
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   isActive("/dashboard")
-                    ? "bg-indigo-50 border-indigo-500 text-indigo-700"
-                    : "text-gray-600"
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700 dark:bg-indigo-500 dark:border-indigo-500 dark:text-indigo-50"
+                    : "text-gray-600 dark:text-white"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -184,7 +196,7 @@ const Header: React.FC = () => {
                 <>
                   <Link href="/login">
                     <span
-                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-700"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-100"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Login
