@@ -4,9 +4,16 @@
 const Home: React.FC = () => {
 
   return (
-    <div className="p-4">
+    <div className="h-screen bg-white dark:bg-gray-800 color-transition">
       {/* Hero Section */}
-      <h1 className="text-2xl font-semibold">Welcome to your Dashboard</h1>
+      <section className="p-0 m-0 w-full h-5/6 shadow-sm bg-indigo-400 dark:bg-indigo-950 color-transition">
+        
+      </section>
+
+      {/* Main Content */}
+      <div >
+        
+      </div>
     </div>
   );
 };
