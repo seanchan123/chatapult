@@ -1,9 +1,9 @@
 // src/contexts/AuthContext.tsx
 'use client';
 
-import React, { createContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
+import React, { createContext, useState, useEffect } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;

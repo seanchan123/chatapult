@@ -12,10 +12,16 @@ const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agree, setAgree] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!agree) {
+      setError("You must agree to the terms and conditions to continue.");
+      return;
+    }
 
     try {
       login(); // Sets cookie and redirects to the dashboard
@@ -39,10 +45,10 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="overflow-hidden h-screen flex items-center justify-center bg-indigo-400 dark:bg-indigo-950">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md color-transition">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-4/5 lg:w-full max-w-md color-transition">
         <h1
           className="text-2xl font-bold text-center mb-6 bg-gradient-to-t bg-clip-text 
-            text-transparent from-indigo-500 to-indigo-800 dark:from-indigo-300 dark:to-indigo-500"
+            text-transparent from-indigo-400 to-indigo-600 dark:from-indigo-400 dark:to-indigo-500"
         >
           Register
         </h1>
@@ -59,7 +65,7 @@ const RegisterPage: React.FC = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
+              className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
             />
           </div>
           <div className="mb-4">
@@ -71,7 +77,7 @@ const RegisterPage: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
+              className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
             />
           </div>
           <div className="mb-6">
@@ -83,12 +89,38 @@ const RegisterPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:border-indigo-500"
+              className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
             />
+          </div>
+          <div className="flex items-center justify-center mb-6">
+
+            <input
+              type="checkbox"
+              id="agree"
+              checked={agree}
+              onChange={(e) => setAgree(e.target.checked)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor="agree"
+              className="ml-2 block text-sm text-gray-700 dark:text-gray-100"
+            >
+              I agree to the{" "}
+              <Link
+                href="/terms"
+                rel="noopener noreferrer" target="_blank"
+                className="text-indigo-800 dark:text-indigo-500 hover:underline"
+              >
+                terms and conditions
+              </Link>
+            </label>
           </div>
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white font-medium py-2 rounded-md hover:bg-indigo-700 focus:outline-none"
+            className={`w-full bg-indigo-600 text-white font-medium py-2 rounded-md hover:bg-indigo-700 focus:outline-none ${
+              !agree ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={!agree}
           >
             Register
           </button>
