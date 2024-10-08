@@ -39,7 +39,7 @@ const Header: React.FC = () => {
                   width={75}
                   height={75}
                 />
-                <span className="font-bold text-3xl text-gray-800 dark:text-white">
+                <span className="font-bold text-3xl tracking-wide text-gray-800 dark:text-white">
                   Chatapult
                 </span>
               </span>
