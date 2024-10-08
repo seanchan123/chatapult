@@ -100,6 +100,9 @@ const Header: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center md:hidden">
+            <div className="px-4 py-2 border-gray-200 dark:border-gray-600">
+              <ThemeToggle />
+            </div>
             <button
               onClick={toggleMenu}
               type="button"
@@ -108,7 +111,7 @@ const Header: React.FC = () => {
               aria-expanded={isMenuOpen}
             >
               <span className="sr-only">Open main menu</span>
-              {/* Icon when menu is closed. Heroicon name: menu */}
+              {/* Icon when menu is closed */}
               {!isMenuOpen ? (
                 <svg
                   className="block h-6 w-6"
@@ -126,7 +129,7 @@ const Header: React.FC = () => {
                   />
                 </svg>
               ) : (
-                // Icon when menu is open. Heroicon name: x
+                // Icon when menu is open
                 <svg
                   className="block h-6 w-6"
                   xmlns="http://www.w3.org/2000/svg"
@@ -180,7 +183,7 @@ const Header: React.FC = () => {
               </span>
             </Link>
           </div>
-          <div className="pt-4 pb-3 border-t border-gray-200">
+          <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-600">
             <div className="px-2 space-y-1">
               {isAuthenticated ? (
                 <button
