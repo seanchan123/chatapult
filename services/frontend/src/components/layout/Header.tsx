@@ -35,7 +35,7 @@ const Header: React.FC = () => {
                 <Image
                   src="/assets/images/logo.svg"
                   alt="Logo"
-                  className="indigo-700 dark:indigo-500"
+                  className="text-indigo-700 dark:text-indigo-500"
                   width={75}
                   height={75}
                 />
