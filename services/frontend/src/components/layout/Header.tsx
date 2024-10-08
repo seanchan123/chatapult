@@ -78,7 +78,7 @@ const Header: React.FC = () => {
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-100 dark:bg-transparent dark:hover:bg-gray-700"
               >
                 Logout
               </button>
@@ -191,7 +191,7 @@ const Header: React.FC = () => {
                     handleLogout();
                     setIsMenuOpen(false);
                   }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700"
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-100"
                 >
                   Logout
                 </button>
@@ -207,7 +207,7 @@ const Header: React.FC = () => {
                   </Link>
                   <Link href="/register">
                     <span
-                      className="block px-3 py-2 rounded-md text-base font-medium text-white bg-indigo-600"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-100"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Sign Up
