@@ -160,7 +160,7 @@ const Header: React.FC = () => {
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   isActive("/dashboard")
                     ? "bg-indigo-50 border-indigo-500 text-indigo-700"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
+                    : "text-gray-600"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -176,7 +176,7 @@ const Header: React.FC = () => {
                     handleLogout();
                     setIsMenuOpen(false);
                   }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700"
                 >
                   Logout
                 </button>
@@ -184,7 +184,7 @@ const Header: React.FC = () => {
                 <>
                   <Link href="/login">
                     <span
-                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-700"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Login
@@ -192,7 +192,7 @@ const Header: React.FC = () => {
                   </Link>
                   <Link href="/register">
                     <span
-                      className="block px-3 py-2 rounded-md text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-white bg-indigo-600"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Sign Up
