@@ -1,7 +1,7 @@
 // src/app/layout.tsx
 
 import React from "react";
-import { Roboto } from "@next/font/google";
+import { Roboto } from "next/font/google";
 
 import "@/styles/globals.css";
 import Header from "@/components/layout/Header";
