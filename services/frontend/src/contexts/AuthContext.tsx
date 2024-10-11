@@ -7,7 +7,7 @@ import React, { createContext, useState, useEffect } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: () => void;
+  login: (token: string) => void; // Accept the JWT token on login
   logout: () => void;
 }
 
@@ -23,21 +23,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check authentication status on mount
   useEffect(() => {
-    const token = Cookies.get('authToken');
+    const token = Cookies.get('authToken'); // Check if the token exists in cookies
     if (token) {
-      setIsAuthenticated(true);
+      setIsAuthenticated(true); // Set user as authenticated if token exists
     }
   }, []);
 
-  const login = () => {
-    // After successful login:
-    Cookies.set('authToken', 'login_token', { expires: 1 }); // Expires in 1 day
+  const login = (token: string) => {
+    // After successful login from backend, store the JWT token:
+    Cookies.set('authToken', token, { expires: 1 }); // Store JWT token in cookies (1 day expiration)
     setIsAuthenticated(true);
     router.push('/dashboard');
   };
 
   const logout = () => {
-    // Implement your logout logic here (e.g., API call)
+    // Remove the JWT token from cookies on logout
     Cookies.remove('authToken');
     setIsAuthenticated(false);
     router.push('/');

@@ -7,7 +7,6 @@ import { AuthContext } from "@/contexts/AuthContext";
 
 const LoginPage: React.FC = () => {
   const { login } = useContext(AuthContext);
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,20 +15,19 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
 
     try {
-      // const response = await fetch("/api/login", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ username, password }),
-      // });
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-      // if (response.ok) {
-      //   login(); // Call the login function to set cookies and redirect
-      // } else {
-      //   setError("Login failed. Please check your credentials.");
-      // }
-
-      // Simulate a successful login (Replace this with your actual login logic)
-      login();
+      if (response.ok) {
+        const data = await response.json();
+        const { token } = data; // Assume the server returns a token
+        login(token); // Pass the JWT token to the login function
+      } else {
+        setError("Login failed. Please check your credentials.");
+      }
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again later.");
