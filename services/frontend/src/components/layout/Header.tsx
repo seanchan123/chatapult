@@ -70,15 +70,15 @@ const Header: React.FC = () => {
                 Dashboard
               </span>
             </Link>
-            <Link href="/chat">
+            <Link href="/chats">
               <span
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive("/chat")
+                  isActive("/chats")
                     ? "border-indigo-700 text-gray-900 dark:text-gray-100 dark:border-indigo-500"
                     : "border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-white"
                 }`}
               >
-                Chat
+                Chats
               </span>
             </Link>
           </div>
@@ -193,16 +193,16 @@ const Header: React.FC = () => {
                 Dashboard
               </span>
             </Link>
-            <Link href="/chat">
+            <Link href="/chats">
               <span
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  isActive("/chat")
+                  isActive("/chats")
                     ? "bg-indigo-50 border-indigo-500 text-indigo-700 dark:bg-indigo-500 dark:border-indigo-500 dark:text-indigo-50"
                     : "text-gray-600 dark:text-white"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Chat
+                Chats
               </span>
             </Link>
           </div>
