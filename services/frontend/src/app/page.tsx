@@ -7,7 +7,7 @@ const Home: React.FC = () => {
   return (
     <div className="pt-24 h-screen bg-white dark:bg-gray-800 color-transition">
       {/* Hero Section */}
-      <section className="w-full h-full sm:h-4/5 md:h-3/5 shadow-sm flex items-center justify-center bg-indigo-400 dark:bg-indigo-950 color-transition">
+      <section className="w-full h-full sm:h-4/5 md:h-3/5 shadow-sm flex items-center justify-center bg-indigo-300 dark:bg-indigo-950 color-transition">
         <div className="text-center w-full sm:w-2/3 md:w-1/2 lg:w-1/3 -mt-4 sm:-mt-4 md:-mt-6">
           <div className="italic text-3xl sm:text-4xl md:text-5xl text-gray-800 dark:text-white">
             Launch your skills with AI dialogue using{" "}
