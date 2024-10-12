@@ -81,7 +81,7 @@ const ChatsPage: React.FC = () => {
             {folders.map((folder) => (
               <div
                 key={folder.id}
-                className="p-4 w-60 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-100 rounded-md shadow-lg flex flex-col justify-between"
+                className="p-4 w-60 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-100 rounded-md shadow-lg flex flex-col cursor-pointer justify-between"
                 onDragOver={handleDragOver}
               >
                 {/* Icon and Folder Name in Same Line */}
@@ -100,7 +100,7 @@ const ChatsPage: React.FC = () => {
                       d="M3 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
                     />
                   </svg>
-                  <h2 className="text-lg font-semibold truncate w-40">
+                  <h2 className="text-lg font-medium truncate w-40">
                     {folder.name}
                   </h2>
                 </div>
