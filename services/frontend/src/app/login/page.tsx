@@ -35,7 +35,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="overflow-hidden h-screen flex items-center justify-center bg-indigo-400 dark:bg-indigo-950">
+    <div className="overflow-hidden h-screen flex items-center justify-center">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-4/5 lg:w-full max-w-md color-transition">
         <h1
           className="text-2xl font-bold text-center mb-6 bg-gradient-to-t bg-clip-text 

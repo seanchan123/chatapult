@@ -23,7 +23,7 @@ const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <body className={`${roboto.className} bg-gray-50`}>
         <AuthProvider>
           <Header />
-          <main>{children}</main>
+          <main className="bg-indigo-400 dark:bg-indigo-950 color-transition">{children}</main>
         </AuthProvider>
       </body>
     </html>
