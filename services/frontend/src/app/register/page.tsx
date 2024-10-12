@@ -24,21 +24,21 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      login(); // Sets cookie and redirects to the dashboard
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
 
-      // const response = await fetch("/api/register", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ username, email, password }),
-      // });
-
-      // if (response.ok) {
-      //   login(); // Sets cookie and redirects to the dashboard
-      // } else {
-      //   setError("Registration failed. Please try again.");
-      // }
+      if (response.ok) {
+        const data = await response.json();
+        const { token } = data; // Assume the server returns a token
+        login(token); // Pass the JWT token to the login function
+      } else {
+        setError("Registration failed. Please try again.");
+      }
     } catch (err) {
-      console.log(err);
+      console.error(err);
       setError("Something went wrong. Please try again later.");
     }
   };
