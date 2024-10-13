@@ -122,8 +122,8 @@ const ChatsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen py-12 px-20">
-      <div className="flex flex-col space-y-8 mt-28">
+    <div className="py-8 px-4 md:px-20">
+      <div className="flex flex-col space-y-8 mt-10 md:mt-28">
         {/* Actions Section */}
         <div>
           <div className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">
@@ -133,24 +133,24 @@ const ChatsPage: React.FC = () => {
             </span>
             .
           </div>
-          <div className="flex space-x-6 mb-4">
+          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 mb-4">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, tags, etc."
               required
-              className="w-4/6 py-2 px-4 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
+              className="w-full md:w-4/6 py-2 px-4 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
             />
             <button
               onClick={addNewFolder}
-              className="w-1/6 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md  focus:outline-none"
+              className="w-full md:w-1/6 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md focus:outline-none"
             >
               New Folder
             </button>
             <Link
               href="/chats/new"
-              className="w-1/6 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md text-center focus:outline-none"
+              className="w-full md:w-1/6 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md text-center focus:outline-none"
             >
               New Chat
             </Link>
@@ -166,11 +166,11 @@ const ChatsPage: React.FC = () => {
             </span>
             .
           </div>
-          <div className="flex space-x-8">
+          <div className="flex flex-wrap gap-4">
             {folders.map((folder) => (
               <div
                 key={folder.id}
-                className="p-4 w-60 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 rounded-md shadow-lg flex flex-col cursor-pointer justify-between"
+                className="p-4 w-full md:w-60 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 rounded-md shadow-lg flex flex-col cursor-pointer justify-between"
                 onDrop={() => handleDrop(folder.id)}
                 onDragOver={handleDragOver}
               >
