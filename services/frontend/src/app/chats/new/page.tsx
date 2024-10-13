@@ -78,8 +78,11 @@ const NewChat: React.FC = () => {
     <div className="min-h-screen flex flex-row justify-between p-4 space-x-4 pt-20">
       {/* Left Panel */}
       <div className="hidden lg:block lg:w-1/6 sm:p-4 sm:pt-14 sm:pb-22 md:pb-28">
-        <Link href="/chats" className="bg-indigo-600 text-white p-3 rounded-md hover:bg-indigo-700 focus:outline-none">
-            Back to Chats
+        <Link
+          href="/chats"
+          className="px-4 py-3 rounded-md text-sm font-medium text-gray-800 hover:bg-indigo-400 dark:text-gray-100 dark:bg-transparent dark:hover:bg-indigo-900"
+        >
+          <span className="mr-1">{"⬅"}</span> Go to Chats
         </Link>
       </div>
 
