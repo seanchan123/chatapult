@@ -77,9 +77,8 @@ const NewChat: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-row justify-between p-4 space-x-4 pt-20">
       {/* Left Panel */}
-      <div className="sm:hidden lg:block lg:w-1/6 sm:p-4 sm:pt-14 sm:pb-22 md:pb-27">
+      <div className="hidden lg:block lg:w-1/6 sm:p-4 sm:pt-14 sm:pb-22 md:pb-28">
         <Link href="/chats" className="bg-indigo-600 text-white p-3 rounded-md hover:bg-indigo-700 focus:outline-none">
-        <span className="mr-2">{"<"}</span>
             Back to Chats
         </Link>
       </div>
@@ -135,7 +134,7 @@ const NewChat: React.FC = () => {
       </div>
 
       {/* Right Panel */}
-      <div className="sm:hidden lg:block lg:w-1/6"></div>
+      <div className="hidden lg:block lg:w-1/6 sm:p-4 sm:pt-14 sm:pb-22 md:pb-28"></div>
     </div>
   );
 };
