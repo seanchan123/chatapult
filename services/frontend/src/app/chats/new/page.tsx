@@ -1,6 +1,7 @@
 // src/app/chats/new/page.tsx
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 
 interface Message {
@@ -76,7 +77,12 @@ const NewChat: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-row justify-between p-4 space-x-4 pt-20">
       {/* Left Panel */}
-      <div className="sm:hidden lg:block lg:w-1/6"></div>
+      <div className="sm:hidden lg:block lg:w-1/6 sm:p-4 sm:pt-14 sm:pb-22 md:pb-27">
+        <Link href="/chats" className="bg-indigo-600 text-white p-3 rounded-md hover:bg-indigo-700 focus:outline-none">
+        <span className="mr-2">{"<"}</span>
+            Back to Chats
+        </Link>
+      </div>
 
       {/* Center (Chat) Panel */}
       <div className="flex-1 flex flex-col justify-between py-4 sm:p-4 rounded-lg">
@@ -97,7 +103,7 @@ const NewChat: React.FC = () => {
                   className={`mb-4 p-4 max-w-md w-auto break-words ${
                     message.sender === "user"
                       ? "bg-indigo-600 text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl"
-                      : "bg-gray-200 text-black dark:bg-gray-600 dark:text-gray-100 rounded-tl-xl rounded-tr-xl rounded-br-xl"
+                      : "bg-white text-gray-700 dark:bg-gray-600 dark:text-gray-100 rounded-tl-xl rounded-tr-xl rounded-br-xl"
                   }`}
                 >
                   {message.text}
