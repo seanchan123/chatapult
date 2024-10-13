@@ -215,7 +215,7 @@ const ChatsPage: React.FC = () => {
                 <div className="truncate w-full text-lg font-bold">
                   {chat.name}
                 </div>
-                <div className="font-light text-sm">Last used: {chat.date}</div>
+                <div className="font-light text-sm">Last Used: {chat.date}</div>
                 <div className="overflow-hidden">
                   <span className="text-sm font-medium text-gray-400">
                     Tags:{" "}
@@ -231,7 +231,7 @@ const ChatsPage: React.FC = () => {
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-gray-500">-</span>
+                      <span className="text-xs py-2 text-gray-300 dark:text-gray-500">No tags attached</span>
                     )}
                   </div>
                 </div>
