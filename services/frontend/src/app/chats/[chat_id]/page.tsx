@@ -178,7 +178,7 @@ const ExistingChat: React.FC = () => {
 
       {/* Modal for Editing Chat Details */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex justify-center items-center !m-0">
+        <div onClick={handleModalClose} className="fixed inset-0 z-50 bg-black bg-opacity-75 flex justify-center items-center !m-0">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-4/5 lg:w-full max-w-md mx-auto">
             <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-t bg-clip-text text-transparent from-indigo-400 to-indigo-600 dark:from-indigo-400 dark:to-indigo-500">
               Edit Chat
