@@ -23,6 +23,8 @@ const ExistingChat: React.FC = () => {
     },
   ]);
   const [inputValue, setInputValue] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editText, setEditText] = useState<string>("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -75,6 +77,21 @@ const ExistingChat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Handle modal open/close
+  const handleEditClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+
+  // Handle form submit in the modal
+  const handleModalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="min-h-screen flex flex-row justify-between p-4 space-x-4 pt-20">
@@ -140,7 +157,10 @@ const ExistingChat: React.FC = () => {
 
       {/* Right Panel */}
       <div className="hidden lg:flex lg:w-1/6 sm:p-4 sm:pt-12 sm:pb-20 md:pb-26 justify-end items-start">
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none flex items-center space-x-2">
+        <button
+          onClick={handleEditClick}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none flex items-center space-x-2"
+        >
           <span className="mr-1">Edit</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -155,6 +175,54 @@ const ExistingChat: React.FC = () => {
           </svg>
         </button>
       </div>
+
+      {/* Modal for Editing Chat Details */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex justify-center items-center !m-0">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-4/5 lg:w-full max-w-md mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-t bg-clip-text text-transparent from-indigo-400 to-indigo-600 dark:from-indigo-400 dark:to-indigo-500">
+              Edit Chat
+            </h2>
+            <form onSubmit={handleModalSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                  Chat ID
+                </label>
+                <input
+                  type="text"
+                  value={chat_id}
+                  disabled
+                  className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                  Edit Message
+                </label>
+                <textarea
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
+                  placeholder="Edit your chat message here..."
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-indigo-600 text-white font-medium py-2 rounded-md hover:bg-indigo-700 focus:outline-none"
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={handleModalClose}
+                className="w-full text-white font-medium py-2 rounded-md bg-gray-400 hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-600 focus:outline-none mt-4"
+              >
+                Cancel
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
