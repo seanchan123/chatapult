@@ -75,7 +75,7 @@ const NewChat: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-between p-4">
-      <div className="flex-1 mt-10 md:mt-28 overflow-y-auto p-4 pb-24 w-1/2 relative left-1/4">
+      <div className="flex-1 mt-24 md:mt-28 overflow-y-auto p-4 pb-24 w-full md:w-2/3 lg:w-1/2 mx-auto">
         {/* Chat Message Area */}
         {messages.map((message) => (
           <div
@@ -85,11 +85,11 @@ const NewChat: React.FC = () => {
             }`}
           >
             <div className="flex flex-col items-start">
-              <div className="text-xs text-gray-500 mb-1">
+              <div className="text-xs text-gray-500 mt-4 mb-0.5">
                 {message.timestamp}
               </div>
               <div
-                className={`mb-4 p-4 max-w-md w-auto ${
+                className={`mb-0 md:mb-4 p-4 max-w-md w-auto ${
                   message.sender === "user"
                     ? "bg-indigo-600 text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl"
                     : "bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-100 rounded-tl-xl rounded-tr-xl rounded-br-xl"
@@ -105,7 +105,7 @@ const NewChat: React.FC = () => {
       </div>
 
       {/* Input Section */}
-      <div className="fixed w-full md:w-1/2 bottom-5 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 p-4 rounded-lg shadow-lg bg-white dark:bg-gray-700">
+      <div className="fixed w-full bottom-0 md:bottom-5 md:rounded-lg left-0 px-4 flex items-center space-x-4 p-4 rounded-none shadow-lg bg-white dark:bg-gray-700 md:w-2/3 lg:w-1/2 md:left-1/2 transform md:-translate-x-1/2">
         <input
           type="text"
           value={inputValue}
