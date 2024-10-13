@@ -206,8 +206,9 @@ const ChatsPage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {chats.map((chat) => (
-              <div
+              <Link
                 key={chat.id}
+                href={`/chats/${chat.id}`}
                 className="p-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 font-medium rounded-md shadow-md cursor-pointer"
                 draggable
                 onDragStart={() => handleDragStart(chat.id)}
@@ -231,11 +232,13 @@ const ChatsPage: React.FC = () => {
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs py-2 text-gray-300 dark:text-gray-500">No tags attached</span>
+                      <span className="text-xs py-2 text-gray-300 dark:text-gray-500">
+                        No tags attached
+                      </span>
                     )}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
