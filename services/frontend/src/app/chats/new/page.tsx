@@ -7,24 +7,34 @@ interface Message {
   id: number;
   text: string;
   sender: "user" | "system";
+  timestamp: string;
 }
 
 const NewChat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: "Hello! How can I assist you today?", sender: "system" },
+    {
+      id: 1,
+      text: "Hello! How can I assist you today?",
+      sender: "system",
+      timestamp: new Date().toLocaleTimeString(),
+    },
   ]);
   const [inputValue, setInputValue] = useState<string>("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Function to handle sending a new message
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
+
+    const currentTime = new Date().toLocaleTimeString();
 
     // Add the user's message
     const newMessage: Message = {
       id: messages.length + 1,
       text: inputValue,
       sender: "user",
+      timestamp: currentTime,
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
 
@@ -37,6 +47,7 @@ const NewChat: React.FC = () => {
         id: messages.length + 2,
         text: "This is a simulated response.",
         sender: "system",
+        timestamp: new Date().toLocaleTimeString(),
       };
       setMessages((prevMessages) => [...prevMessages, systemMessage]);
     }, 1000);
@@ -71,16 +82,21 @@ const NewChat: React.FC = () => {
             key={message.id}
             className={`flex w-full ${
               message.sender === "user" ? "justify-end" : "justify-start"
-            }`} // Align user messages to the right and system messages to the left
+            }`}
           >
-            <div
-              className={`mb-4 p-4 max-w-md w-auto ${
-                message.sender === "user"
-                  ? "bg-indigo-600 text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl"
-                  : "bg-gray-200 text-black dark:bg-gray-600 dark:text-gray-100 rounded-tl-xl rounded-tr-xl rounded-br-xl"
-              }`}
-            >
-              {message.text}
+            <div className="flex flex-col items-start">
+              <div className="text-xs text-gray-500 mb-1">
+                {message.timestamp}
+              </div>
+              <div
+                className={`mb-4 p-4 max-w-md w-auto ${
+                  message.sender === "user"
+                    ? "bg-indigo-600 text-white rounded-tl-xl rounded-tr-xl rounded-bl-xl"
+                    : "bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-100 rounded-tl-xl rounded-tr-xl rounded-br-xl"
+                }`}
+              >
+                {message.text}
+              </div>
             </div>
           </div>
         ))}
