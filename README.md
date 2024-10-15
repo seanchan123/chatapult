@@ -18,7 +18,7 @@ Chatapult/
 │   ├── frontend/
 │   ├── auth-service/
 │   ├── database-service/
-│   └── ai-inference-service/
+│   └── ai-dialogue-service/
 ├── kong/
 ├── shared/
 ├── scripts/
@@ -30,7 +30,7 @@ Chatapult/
 - `services/frontend`: A Next.js application that serves as the user interface for Chatapult.
 - `services/auth-service`: Handles authentication and authorization for the application.
 - `services/database-service`: Responsible for managing and interacting with the application's database.
-- `services/ai-inference-service`: Provides AI/ML capabilities by handling model inference and predictions.
+- `services/ai-dialogue-service`: Provides AI/ML capabilities by handling model dialogue and inferences.
 - `kong`: Configured as a reverse proxy to handle traffic distribution among the microservices.
 - `shared`: Contains reusable utilities and constants that are shared across multiple services.
 - `scripts`: Shell scripts for automating build, deployment, and other tasks.
@@ -82,10 +82,10 @@ cd services/database-service
 npm start
 ```
 
-### AI Inference Service
-To start the AI Inference Service:
+### AI Dialogue Service
+To start the AI Dialogue Service:
 ```bash
-cd services/ai-inference-service
+cd services/ai-dialogue-service
 python app.py
 ```
 
