@@ -2,7 +2,6 @@
 # uvicorn app:app --host 0.0.0.0 --port 8080 --reload
 
 import httpx
-from typing import Optional
 from fastapi.responses import StreamingResponse
 from fastapi import FastAPI, Request, Response, HTTPException
 
@@ -20,6 +19,7 @@ async def validate_api_key(request: Request, call_next):
     
     response = await call_next(request)
     return response
+
 
 @app.api_route(
     "/v1/{path:path}",
@@ -45,43 +45,48 @@ async def handle_proxy(request: Request, path: str):
     # Handle request streaming
     if "text/event-stream" in request.headers.get("Accept", ""):
         headers["Accept"] = "text/event-stream"
-        async with httpx.AsyncClient(timeout=None) as client:
+        
+        async def stream_response():
+            async with httpx.AsyncClient(timeout=None) as client:
+                try:
+                    async with client.stream(
+                        request.method,
+                        target_url,
+                        headers=headers,
+                        content=body,
+                    ) as resp:
+                        async for chunk in resp.aiter_bytes():
+                            yield chunk
+                except httpx.RequestError as exc:
+                    raise HTTPException(
+                        status_code=500, detail=f"Error connecting to Ollama: {exc}"
+                    )
+        
+        return StreamingResponse(
+            stream_response(),
+            status_code=200,
+            media_type="text/event-stream",
+        )
+    else:
+        # Forward the request to Ollama and get the response
+        async with httpx.AsyncClient() as client:
             try:
-                async with client.stream(
-                    request.method,
-                    target_url,
+                ollama_response = await client.request(
+                    method=request.method,
+                    url=target_url,
                     headers=headers,
                     content=body,
-                ) as resp:
-                    return StreamingResponse(
-                        resp.aiter_bytes(),
-                        status_code=resp.status_code,
-                        headers=resp.headers,
-                        media_type=resp.headers.get("Content-Type"),
-                    )
+                )
             except httpx.RequestError as exc:
                 raise HTTPException(
                     status_code=500, detail=f"Error connecting to Ollama: {exc}"
                 )
-    
-    # Forward the request to Ollama and get the response
-    async with httpx.AsyncClient() as client:
-        try:
-            ollama_response = await client.request(
-                method=request.method,
-                url=target_url,
-                headers=headers,
-                content=body,
+            return Response(
+                content=ollama_response.content,
+                status_code=ollama_response.status_code,
+                headers=ollama_response.headers,
             )
-        except httpx.RequestError as exc:
-            raise HTTPException(
-                status_code=500, detail=f"Error connecting to Ollama: {exc}"
-            )
-        return Response(
-            content=ollama_response.content,
-            status_code=ollama_response.status_code,
-            headers=ollama_response.headers,
-        )
+
 
 async def log_request(request: Request, body: bytes):
     # Log the request method, URL path, and body
