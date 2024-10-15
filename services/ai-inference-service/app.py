@@ -10,21 +10,16 @@ app = FastAPI()
 OLLAMA_URL = "http://localhost:11434"
 API_KEY = "aZk928j7i6429P"
 
-
 @app.middleware("http")
 async def validate_api_key(request: Request, call_next):
-    print(1)
-
+    
     # Check for API key in Authorization header
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {API_KEY}":
         raise HTTPException(status_code=401, detail="Unauthorized")
     
-    print(2)
-
     response = await call_next(request)
     return response
-
 
 @app.api_route(
     "/v1/{path:path}",
@@ -34,14 +29,13 @@ async def handle_proxy(request: Request, path: str):
     # Log the request body
     await log_request(request)
     
-    print("3")
-
     # Create the target URL based on the original request
     target_url = f"{OLLAMA_URL}/v1/{path}"
-
+    # Prepare headers without the Authorization header
+    headers = {key: value for key, value in request.headers.items() if key.lower() != 'authorization'}
     # Handle request streaming
     if "text/event-stream" in request.headers.get("Accept", ""):
-        headers = {"Accept": "text/event-stream"}
+        headers["Accept"] = "text/event-stream"
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream(
                 request.method,
@@ -54,27 +48,24 @@ async def handle_proxy(request: Request, path: str):
                     status_code=resp.status_code,
                     headers=resp.headers,
                 )
-
     # Forward the request to Ollama and get the response
     async with httpx.AsyncClient() as client:
         try:
             ollama_response = await client.request(
                 method=request.method,
                 url=target_url,
-                headers=request.headers,
+                headers=headers,
                 content=await request.body(),
             )
         except httpx.RequestError as exc:
             raise HTTPException(
                 status_code=500, detail=f"Error connecting to Ollama: {exc}"
             )
-
         return Response(
             content=ollama_response.content,
             status_code=ollama_response.status_code,
             headers=ollama_response.headers,
         )
-
 
 async def log_request(request: Request):
     # Read the request body
