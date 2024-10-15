@@ -1,10 +1,9 @@
 # app.py
 # uvicorn app:app --host 0.0.0.0 --port 8080 --reload
-# curl --ssl-no-revoke https://ec2-13-212-54-9.ap-southeast-1.compute.amazonaws.com:8080/v1/chat/completions -H "Content-Type: application/json" -H "Authorization: Bearer aZk928j7i6429P" -d "{ \"model\": \"gemma2:2b\", \"messages\": [ {\"role\": \"user\", \"content\": \"Tell me a story about a brave knight\"} ], \"stream\": true }"
 
-from fastapi import FastAPI, Request, Response, HTTPException
 import httpx
 from typing import Optional
+from fastapi import FastAPI, Request, Response, HTTPException
 
 app = FastAPI()
 
@@ -14,6 +13,12 @@ API_KEY = "aZk928j7i6429P"
 
 @app.middleware("http")
 async def validate_api_key(request: Request, call_next):
+    # Read the request body
+    body = await request.body()
+    # Log the request method, URL path, and body
+    print(f"Received request: {request.method} {request.url.path}")
+    print(f"Request Body: {body.decode('utf-8')}")
+
     # Check for API key in Authorization header
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {API_KEY}":
