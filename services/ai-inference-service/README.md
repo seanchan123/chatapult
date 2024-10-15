@@ -114,3 +114,29 @@ curl -X POST http://<AWS_EC2_PUBLIC_IPV4_DNS>:8080/v1/chat/completions -H "Autho
 ```
 
 Though this is better tested on a client like **Postman** or **Insomnia**.
+
+## Running the Service in the Background (Optional)
+
+This is purely optional - I found it useful to run the service in the background so that it does not stop when I close the terminal.
+
+Install `tmux`, which is a terminal multiplexer that allows you to run multiple terminal sessions in a single window:
+```
+sudo apt-get install tmux
+```
+
+Start a `tmux` session:
+```bash
+tmux
+```
+
+Run the FastAPI server in the `tmux` session:
+```bash
+uvicorn app:app --host 0.0.0.0 --port 8080 --reload
+```
+
+To detach from the `tmux` session, press `Ctrl + B` followed by `D`. 
+
+To reattach to the session, run:
+```bash
+tmux attach
+```
