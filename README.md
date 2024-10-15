@@ -86,7 +86,7 @@ npm start
 To start the AI Dialogue Service:
 ```bash
 cd services/ai-dialogue-service
-python app.py
+uvicorn app:app --reload
 ```
 
 ## Contribution
