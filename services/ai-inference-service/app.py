@@ -1,5 +1,6 @@
 # app.py
 # uvicorn app:app --host 0.0.0.0 --port 8080 --reload
+# curl --ssl-no-revoke https://ec2-13-212-54-9.ap-southeast-1.compute.amazonaws.com:8080/v1/chat/completions -H "Content-Type: application/json" -H "Authorization: Bearer aZk928j7i6429P" -d "{ \"model\": \"gemma2:2b\", \"messages\": [ {\"role\": \"user\", \"content\": \"Tell me a story about a brave knight\"} ], \"stream\": true }"
 
 from fastapi import FastAPI, Request, Response, HTTPException
 import httpx
@@ -8,7 +9,7 @@ from typing import Optional
 app = FastAPI()
 
 OLLAMA_URL = "http://localhost:11434"
-API_KEY = "2200530_OLLAMA_EC2"
+API_KEY = "aZk928j7i6429P"
 
 
 @app.middleware("http")
@@ -22,20 +23,32 @@ async def validate_api_key(request: Request, call_next):
     return response
 
 
-@app.api_route("/v1/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"])
+@app.api_route(
+    "/v1/{path:path}",
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+)
 async def handle_proxy(request: Request, path: str):
     # Log the request body
     await log_request(request)
 
     # Create the target URL based on the original request
     target_url = f"{OLLAMA_URL}/v1/{path}"
-    
+
     # Handle request streaming
     if "text/event-stream" in request.headers.get("Accept", ""):
         headers = {"Accept": "text/event-stream"}
         async with httpx.AsyncClient(timeout=None) as client:
-            async with client.stream(request.method, target_url, headers=headers, content=await request.body()) as resp:
-                return Response(content=resp.aiter_raw(), status_code=resp.status_code, headers=resp.headers)
+            async with client.stream(
+                request.method,
+                target_url,
+                headers=headers,
+                content=await request.body(),
+            ) as resp:
+                return Response(
+                    content=resp.aiter_raw(),
+                    status_code=resp.status_code,
+                    headers=resp.headers,
+                )
 
     # Forward the request to Ollama and get the response
     async with httpx.AsyncClient() as client:
@@ -44,12 +57,18 @@ async def handle_proxy(request: Request, path: str):
                 method=request.method,
                 url=target_url,
                 headers=request.headers,
-                content=await request.body()
+                content=await request.body(),
             )
         except httpx.RequestError as exc:
-            raise HTTPException(status_code=500, detail=f"Error connecting to Ollama: {exc}")
-        
-        return Response(content=ollama_response.content, status_code=ollama_response.status_code, headers=ollama_response.headers)
+            raise HTTPException(
+                status_code=500, detail=f"Error connecting to Ollama: {exc}"
+            )
+
+        return Response(
+            content=ollama_response.content,
+            status_code=ollama_response.status_code,
+            headers=ollama_response.headers,
+        )
 
 
 async def log_request(request: Request):
