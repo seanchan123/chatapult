@@ -12,12 +12,12 @@ API_KEY = "aZk928j7i6429P"
 
 @app.middleware("http")
 async def validate_api_key(request: Request, call_next):
-    
+    print(1)
     # Check for API key in Authorization header
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {API_KEY}":
         raise HTTPException(status_code=401, detail="Unauthorized")
-    
+    print(2)
     response = await call_next(request)
     return response
 
@@ -26,28 +26,46 @@ async def validate_api_key(request: Request, call_next):
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
 )
 async def handle_proxy(request: Request, path: str):
+    # Read the request body once
+    body = await request.body()
+    
     # Log the request body
-    await log_request(request)
+    await log_request(request, body)
+    
+    print("3")
     
     # Create the target URL based on the original request
     target_url = f"{OLLAMA_URL}/v1/{path}"
-    # Prepare headers without the Authorization header
-    headers = {key: value for key, value in request.headers.items() if key.lower() != 'authorization'}
+    
+    # Prepare headers (exclude 'host' header and optionally 'authorization')
+    headers = {
+        key: value
+        for key, value in request.headers.items()
+        if key.lower() != 'host'
+    }
+    
     # Handle request streaming
     if "text/event-stream" in request.headers.get("Accept", ""):
         headers["Accept"] = "text/event-stream"
         async with httpx.AsyncClient(timeout=None) as client:
-            async with client.stream(
-                request.method,
-                target_url,
-                headers=headers,
-                content=await request.body(),
-            ) as resp:
-                return Response(
-                    content=resp.aiter_raw(),
-                    status_code=resp.status_code,
-                    headers=resp.headers,
+            try:
+                async with client.stream(
+                    request.method,
+                    target_url,
+                    headers=headers,
+                    content=body,
+                ) as resp:
+                    return StreamingResponse(
+                        resp.aiter_bytes(),
+                        status_code=resp.status_code,
+                        headers=resp.headers,
+                        media_type=resp.headers.get("Content-Type"),
+                    )
+            except httpx.RequestError as exc:
+                raise HTTPException(
+                    status_code=500, detail=f"Error connecting to Ollama: {exc}"
                 )
+    
     # Forward the request to Ollama and get the response
     async with httpx.AsyncClient() as client:
         try:
@@ -55,7 +73,7 @@ async def handle_proxy(request: Request, path: str):
                 method=request.method,
                 url=target_url,
                 headers=headers,
-                content=await request.body(),
+                content=body,
             )
         except httpx.RequestError as exc:
             raise HTTPException(
@@ -67,9 +85,7 @@ async def handle_proxy(request: Request, path: str):
             headers=ollama_response.headers,
         )
 
-async def log_request(request: Request):
-    # Read the request body
-    body = await request.body()
+async def log_request(request: Request, body: bytes):
     # Log the request method, URL path, and body
     print(f"Received request: {request.method} {request.url.path}")
     print(f"Request Body: {body.decode('utf-8')}")
