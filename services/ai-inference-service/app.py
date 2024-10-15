@@ -13,18 +13,10 @@ API_KEY = "aZk928j7i6429P"
 
 @app.middleware("http")
 async def validate_api_key(request: Request, call_next):
-    # Read the request body
-    body = await request.body()
-    # Log the request method, URL path, and body
-    print(f"Authorization: {request.headers.get('Authorization')}")
-
     # Check for API key in Authorization header
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {API_KEY}":
         raise HTTPException(status_code=401, detail="Unauthorized")
-    
-    print(f"Received request: {request.method} {request.url.path}")
-    print(f"Request Body: {body.decode('utf-8')}")
 
     response = await call_next(request)
     return response
@@ -37,6 +29,7 @@ async def validate_api_key(request: Request, call_next):
 async def handle_proxy(request: Request, path: str):
     # Log the request body
     await log_request(request)
+    print("handle_proxy function")
 
     # Create the target URL based on the original request
     target_url = f"{OLLAMA_URL}/v1/{path}"
