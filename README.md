@@ -16,11 +16,10 @@ Chatapult/
 ├── docker-compose.yml
 ├── services/
 │   ├── frontend/
-│   ├── api-gateway/
 │   ├── auth-service/
 │   ├── database-service/
 │   └── ai-inference-service/
-├── nginx/
+├── kong/
 ├── shared/
 ├── scripts/
 └── docs/
@@ -29,11 +28,10 @@ Chatapult/
 ### Main Components
 
 - `services/frontend`: A Next.js application that serves as the user interface for Chatapult.
-- `services/api-gateway`: Routes incoming requests to the correct backend services.
 - `services/auth-service`: Handles authentication and authorization for the application.
 - `services/database-service`: Responsible for managing and interacting with the application's database.
 - `services/ai-inference-service`: Provides AI/ML capabilities by handling model inference and predictions.
-- `nginx`: Configured as a reverse proxy to handle traffic distribution among the microservices.
+- `kong`: Configured as a reverse proxy to handle traffic distribution among the microservices.
 - `shared`: Contains reusable utilities and constants that are shared across multiple services.
 - `scripts`: Shell scripts for automating build, deployment, and other tasks.
 - `docs`: Documentation for the application, including architectural overviews and API specifications.
@@ -53,7 +51,7 @@ Chatapult/
    npm install
    ```
 
-   Repeat for `api-gateway`, `auth-service`, and `database-service`.
+   Repeat for `auth-service`, and `database-service`.
 
 3. **Run the Application with Docker Compose**
    Use the `docker-compose.yml` to build and run all services:
@@ -68,13 +66,6 @@ To run the Next.js frontend locally:
 ```bash
 cd services/frontend
 npm run dev
-```
-
-### API Gateway
-To start the API Gateway:
-```bash
-cd services/api-gateway
-npm start
 ```
 
 ### Auth Service
