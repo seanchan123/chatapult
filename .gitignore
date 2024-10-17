@@ -67,3 +67,7 @@ Thumbs.db
 
 # GitHub Actions
 /.github/
+
+# Local env files
+*.pem
+*.key
