@@ -1,48 +1,52 @@
 # app.py
 # uvicorn app:app --host 0.0.0.0 --port 8080 --reload
 
+import os
 import httpx
+from dotenv import load_dotenv
 from fastapi.responses import StreamingResponse
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Response
+
+# Load environment variables from .env if available
+load_dotenv()
 
 app = FastAPI()
 
-OLLAMA_URL = "http://localhost:11434"
-API_KEY = "aZk928j7i6429P"
+# Retrieve API keys from environment variables
+INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_URL = "https://api.openai.com/v1"
+
+if not INTERNAL_API_KEY or not OPENAI_API_KEY:
+    raise Exception("Missing required environment variables. Please set INTERNAL_API_KEY and OPENAI_API_KEY.")
 
 @app.middleware("http")
 async def validate_api_key(request: Request, call_next):
-    # Check for API key in Authorization header
+    """Validate incoming requests using the internal API key."""
     auth_header = request.headers.get("Authorization")
-    if auth_header != f"Bearer {API_KEY}":
+    if auth_header != f"Bearer {INTERNAL_API_KEY}":
         raise HTTPException(status_code=401, detail="Unauthorized")
-    
     response = await call_next(request)
     return response
 
-
-@app.api_route(
-    "/v1/{path:path}",
-    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
-)
+@app.api_route("/v1/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"])
 async def handle_proxy(request: Request, path: str):
-    # Read the request body once
+    """Proxy incoming requests to the OpenAI API."""
     body = await request.body()
-    
-    # Log the request body
     await log_request(request, body)
     
-    # Create the target URL based on the original request
-    target_url = f"{OLLAMA_URL}/v1/{path}"
+    target_url = f"{OPENAI_API_URL}/{path}"
     
-    # Prepare headers (exclude 'host' and 'authorization' header)
+    # Prepare headers: exclude internal 'host' and 'authorization' headers
     headers = {
         key: value
         for key, value in request.headers.items()
-        if key.lower() != 'host'
+        if key.lower() not in ["host", "authorization"]
     }
+    # Set the OpenAI API key for outgoing requests
+    headers["Authorization"] = f"Bearer {OPENAI_API_KEY}"
     
-    # Handle request streaming
+    # Handle streaming responses if requested
     if "text/event-stream" in request.headers.get("Accept", ""):
         headers["Accept"] = "text/event-stream"
         
@@ -59,19 +63,17 @@ async def handle_proxy(request: Request, path: str):
                             yield chunk
                 except httpx.RequestError as exc:
                     raise HTTPException(
-                        status_code=500, detail=f"Error connecting to Ollama: {exc}"
+                        status_code=500, detail=f"Error connecting to OpenAI API: {exc}"
                     )
-        
         return StreamingResponse(
             stream_response(),
             status_code=200,
             media_type="text/event-stream",
         )
     else:
-        # Forward the request to Ollama and get the response
         async with httpx.AsyncClient() as client:
             try:
-                ollama_response = await client.request(
+                openai_response = await client.request(
                     method=request.method,
                     url=target_url,
                     headers=headers,
@@ -79,16 +81,18 @@ async def handle_proxy(request: Request, path: str):
                 )
             except httpx.RequestError as exc:
                 raise HTTPException(
-                    status_code=500, detail=f"Error connecting to Ollama: {exc}"
+                    status_code=500, detail=f"Error connecting to OpenAI API: {exc}"
                 )
             return Response(
-                content=ollama_response.content,
-                status_code=ollama_response.status_code,
-                headers=ollama_response.headers,
+                content=openai_response.content,
+                status_code=openai_response.status_code,
+                headers=openai_response.headers,
             )
 
-
 async def log_request(request: Request, body: bytes):
-    # Log the request method, URL path, and body
+    """Log the request details for debugging."""
     print(f"Received request: {request.method} {request.url.path}")
-    print(f"Request Body: {body.decode('utf-8')}")
+    try:
+        print(f"Request Body: {body.decode('utf-8')}")
+    except UnicodeDecodeError:
+        print("Request Body: <binary data>")
