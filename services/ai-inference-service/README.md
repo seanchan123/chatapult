@@ -56,12 +56,12 @@ Authorization: Bearer your_internal_api_key
 
 ### Proxy Endpoint
 Any request to:
-```css
+```bash
 POST http://<HOST>:8080/v1/{path:path}
 ```
 
 will be proxied to OpenAI's API at:
-```arduino
+```bash
 POST https://api.openai.com/v1/{path}
 ```
 
