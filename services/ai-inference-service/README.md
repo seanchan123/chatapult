@@ -1,142 +1,91 @@
 # AI Inference Service
 
-This project is a FastAPI-based service designed to act as a proxy for requests to Ollama, an AI model server running locally. The service validates incoming API requests, forwards them to Ollama, and handles streaming responses if necessary.
+A FastAPI-based proxy service that forwards requests to OpenAI’s ChatGPT API. This service enforces an internal API key to validate incoming requests, then uses your OpenAI API key to call OpenAI’s endpoint (e.g., `https://api.openai.com/v1`). It supports both regular and streaming responses.
 
-## Prerequisites
+## Overview
 
-- Ensure you have access to an EC2 instance or local server where Ollama will run.
-- You will need `pip` for installing Python dependencies.
-- Make sure you have `uvicorn` and `httpx` installed to run the FastAPI server.
+- **Technology Stack**: FastAPI, Python 3.8+, httpx, uvicorn  
+- **Purpose**: Acts as an internal gateway for AI requests, ensuring secure communication and providing a consistent interface for other services in the project (e.g., `ai-dialogue-service`).  
+- **Location**: `services/ai-inference-service` within the Chatapult project.
 
-## Setup Instructions
+## Environment Variables
 
-1. **Connect to EC2 Instance**
+Store the following environment variables securely (e.g., in a `.env` file or via your deployment platform):
 
-   First, navigate to the `ai-inference-service` directory on your local machine and connect to your EC2 instance:
+- **`INTERNAL_API_KEY`**  
+  An internal API key used to authenticate incoming requests to this microservice.  
+- **`OPENAI_API_KEY`**  
+  Your OpenAI API key for calling the OpenAI ChatGPT API.
 
+Example `.env` file:
+```
+INTERNAL_API_KEY=some_internal_key
+OPENAI_API_KEY=sk-xyz123
+```
+
+## Installation and Setup
+
+1. **Navigate to the folder**  
    ```bash
-   ssh -i "<PEM_KEY_FILE>" ubuntu@<AWS_EC2_PUBLIC_IPV4_DNS>
+   cd services/ai-inference-service
    ```
 
-2. **Install Ollama**
-
-   Once connected, install Ollama by running the following command:
-
-   ```bash
-   curl -fsSL https://ollama.com/install.sh | sh
-   ```
-
-   After installation, run Ollama with Llama3.2:
-
-   ```bash
-   ollama run llama3.2
-   ```
-
-   To verify the model is running:
-
-   ```bash
-   ollama ps
-   ```
-
-3. **Install Python Dependencies**
-
-   Now, navigate to the `ai-inference-service` directory on your EC2 instance:
-
-   ```bash
-   cd ai-inference-service
-   ```
-
-   Install the required Python dependencies:
-
+2. **Install the dependencies**  
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Run the FastAPI Server**
+3. **Configure Environment Variables**
+   - **Option 1**: Create a .env file in this folder with the required variables (see above).
+   - **Option 2**: Export them manually or via your deployment platform.
 
-   Start the FastAPI service using `uvicorn`:
-
+4. **Run the service**  
    ```bash
-   uvicorn app:app --host 0.0.0.0 --port 8080 --reload
+   uvicorn app:app --port 8080 --reload
    ```
+   - The service will listen on port `8080` by default.
 
-   This will start the API on port 8080 and allow you to interact with Ollama through the service.
+## Usage
 
-## API End points
+### Authorization
+All incoming requests must include the internal API key in the `Authorization` header, for example:
+
+```makefile
+Authorization: Bearer your_internal_api_key
+```
 
 ### Proxy Endpoint
-
-The FastAPI service forwards requests to Ollama through a general-purpose proxy endpoint:
-
-```
-http://<AWS_EC2_PUBLIC_IPV4_DNS>:8080/v1/{path:path}
+Any request to:
+```css
+POST http://<HOST>:8080/v1/{path:path}
 ```
 
-- Supports `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`, `HEAD`, and `PATCH` methods.
-- Handles streaming responses using the `text/event-stream` header if requested.
+will be proxied to OpenAI's API at:
+```arduino
+POST https://api.openai.com/v1/{path}
+```
 
-## Environment Variables
+Note: This service automatically replaces your internal API key with the `OPENAI_API_KEY` before forwarding the request.
 
-- `OLLAMA_URL`: URL where Ollama is running (default: `http://localhost:11434`).
-- `API_KEY`: API key for request validation.
-
-## How It Works
-
-1. **API Key Validation**: The middleware checks for a valid API key in the `Authorization` header of each request.
-2. **Proxying Requests**: Requests are forwarded to Ollama, excluding the `Host` and `Authorization` headers. Streaming responses are handled if requested.
-3. **Request Logging**: The service logs each request method, URL, and body for debugging purposes.
-
-## Testing
-
-To test if the API is working, you can send a sample request using `curl`:
-
+### Example: Streaming Chat Completion
 ```bash
-    curl -X POST http://<AWS_EC2_PUBLIC_IPV4_DNS>.com:8080/v1/chat/completions \
-    -H "Authorization: Bearer <TOKEN>" \
-    -H "Content-Type: application/json" \
-    -H "Accept: text/event-stream" \
-    -d '{
-        "model": "llama3.2",
-        "messages": [
-        {
-            "role": "user",
-            "content": "Tell me a story about a brave knight"
-        }
-        ],
-        "stream": true
-    }'
+curl -X POST http://<HOST>:8080/v1/chat/completions \
+  -H "Authorization: Bearer your_internal_api_key" \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{
+    "model": "o1-mini",
+    "messages": [
+      { "role": "user", "content": "Tell me a story about a brave knight." }
+    ],
+    "stream": true
+  }'
 ```
 
-or in one-line:
+## Logging
+- The service logs each request’s method, URL path, and body (if readable).
+- Logs can be viewed directly in your console where uvicorn is running.
 
-```bash
-curl -X POST http://<AWS_EC2_PUBLIC_IPV4_DNS>:8080/v1/chat/completions -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -H "Accept: text/event-stream" -d "{\"model\": \"llama3.2\", \"messages\": [{\"role\": \"user\", \"content\": \"Tell me a story about a brave knight\"}], \"stream\": true}"
-```
+© 2025 Chatapult
 
-Though this is better tested on a client like **Postman** or **Insomnia**.
-
-## Running the Service in the Background (Optional)
-
-This is purely optional - I found it useful to run the service in the background so that it does not stop when I close the terminal.
-
-Install `tmux`, which is a terminal multiplexer that allows you to run multiple terminal sessions in a single window:
-```
-sudo apt-get install tmux
-```
-
-Start a `tmux` session:
-```bash
-tmux
-```
-
-Run the FastAPI server in the `tmux` session:
-```bash
-uvicorn app:app --host 0.0.0.0 --port 8080 --reload
-```
-
-To detach from the `tmux` session, press `Ctrl + B` followed by `D`. 
-
-To reattach to the session, run:
-```bash
-tmux attach
-```
+Part of the Chatapult project located at `services/ai-inference-service`.
