@@ -36,7 +36,7 @@ OPENAI_API_KEY=sk-xyz123
    ```
 
 3. **Configure Environment Variables**
-   - **Option 1**: Create a .env file in this folder with the required variables (see above).
+   - **Option 1**: Create a `.env` file in this folder with the required variables (see above).
    - **Option 2**: Export them manually or via your deployment platform.
 
 4. **Run the service**  
