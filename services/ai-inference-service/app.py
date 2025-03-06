@@ -54,8 +54,8 @@ async def handle_proxy(request: Request, path: str):
             async with httpx.AsyncClient(timeout=None) as client:
                 try:
                     async with client.stream(
-                        request.method,
-                        target_url,
+                        method=request.method,
+                        url=target_url,
                         headers=headers,
                         content=body,
                     ) as resp:
@@ -71,7 +71,7 @@ async def handle_proxy(request: Request, path: str):
             media_type="text/event-stream",
         )
     else:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=None) as client:
             try:
                 openai_response = await client.request(
                     method=request.method,
@@ -79,9 +79,16 @@ async def handle_proxy(request: Request, path: str):
                     headers=headers,
                     content=body,
                 )
+                openai_response.raise_for_status()
             except httpx.RequestError as exc:
+                print(f"RequestError (non-streaming): {exc}")
                 raise HTTPException(
                     status_code=500, detail=f"Error connecting to OpenAI API: {exc}"
+                )
+            except httpx.HTTPStatusError as exc:
+                print(f"HTTPStatusError (non-streaming): {exc.response.text}")
+                raise HTTPException(
+                    status_code=openai_response.status_code, detail=f"Inference service error: {exc.response.text}"
                 )
             return Response(
                 content=openai_response.content,
