@@ -86,6 +86,8 @@ curl -X POST http://<HOST>:8080/v1/chat/completions \
 - The service logs each request’s method, URL path, and body (if readable).
 - Logs can be viewed directly in your console where uvicorn is running.
 
+___
+
 © 2025 Chatapult
 
 Part of the Chatapult project located at `services/ai-inference-service`.
