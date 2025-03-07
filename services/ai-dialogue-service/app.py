@@ -39,7 +39,7 @@ async def chat_handler(payload: dict):
     3. Retrieves relevant document chunks from Qdrant.
     4. Assembles an augmented prompt.
     5. Forwards the prompt to the ai-inference-service.
-    6. Returns the final LLM response (streaming or non-streaming).
+    6. Returns the final LLM response (streaming or non-streaming) formatted in Markdown.
     """
     query_text = payload.get("query")
     if not query_text:
@@ -61,32 +61,48 @@ async def chat_handler(payload: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error querying Qdrant: {e}")
 
-    # Step 3: Extract context from each ScoredPoint (using payload "text" only)
-    context_chunks = [
-        point.payload.get("page_content", "") 
-        for point in search_results 
-        if point.payload and "page_content" in point.payload
-    ]
+    # Step 3: Extract context and source information from each ScoredPoint
+    context_chunks = []
+    sources = set()
+    for point in search_results:
+        # Retrieve text content from the payload (check "page_content")
+        text = point.payload.get("page_content", "")
+        if text:
+            context_chunks.append(text)
+        # Retrieve source information from the metadata subfield, if available
+        metadata = point.payload.get("metadata", {})
+        src = metadata.get("source", "")
+        if src:
+            sources.add(src)
     context = "\n".join(context_chunks)
+    sources_str = ", ".join(sorted(sources)) if sources else "Unknown"
 
     print("context:", context)
+    print("sources:", sources_str)
 
     # Step 4: Assemble the augmented prompt.
     prompt = (
-        "You are a helpful STEM tutor - please respond with as much detail as possible, and announce that you are one. " +
-        f"You are a knowledgeable STEM tutor. The user asked: \"{query_text}\"\n\n" +
-        f"Relevant context from documents:\n{context}\n\n" +
-        "Please provide a detailed and accurate response."
+        f"Answer the following question using only the provided context. "
+        f"Question: \"{query_text}\"\n\n"
+        f"Context:\n{context}\n\n"
+        "Respond thoroughly and accurately, but do not include any greetings or extra commentary."
     )
 
     # Step 5: Forward the prompt to the inference service.
-    inference_result = await call_inference_service(prompt, stream=stream_requested)
+    raw_response = await call_inference_service(prompt, stream=stream_requested)
 
-    # Step 6: Return the response.
+    # Step 6: For non-streaming responses, post-process the output to wrap it in Markdown,
+    # including a footer with the sources.
     if stream_requested:
-        return inference_result
+        return raw_response  # StreamingResponse returned as-is.
     else:
-        return JSONResponse({"response": inference_result})
+        final_markdown = (
+            f"## Answer\n\n"
+            f"{raw_response}\n\n"
+            f"---\n"
+            f"**Sources:** {sources_str}"
+        )
+        return JSONResponse({"response": final_markdown})
 
 def embed_text(text: str):
     """
