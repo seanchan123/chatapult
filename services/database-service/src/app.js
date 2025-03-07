@@ -1,6 +1,7 @@
 // src/app.js
 import express from 'express';
 import dotenv from 'dotenv';
+import morgan from 'morgan';
 
 import connectDB from './config/db.js';
 import chatRoutes from './routes/chatRoutes.js';
@@ -11,6 +12,9 @@ const app = express();
 
 // Connect to MongoDB
 connectDB();
+
+// Use morgan to log requests
+app.use(morgan('combined'));
 
 // Middleware to parse JSON
 app.use(express.json());
