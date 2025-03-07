@@ -1,5 +1,5 @@
 # app.py
-# Run with: python -m uvicorn app:app --port 8000 --reload
+# uvicorn app:app --port 8000 --reload
 
 import os
 import httpx
@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
@@ -17,7 +16,7 @@ app = FastAPI()
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
 AI_INFERENCE_SERVICE_URL = os.getenv("AI_INFERENCE_SERVICE_URL")  # e.g., http://localhost:8080/v1/chat/completions
 QDRANT_URL = os.getenv("QDRANT_URL")  # e.g., http://localhost:6333
-COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "Chatapult")
+COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "EDE")  # e.g., "EDE"
 
 if not INTERNAL_API_KEY or not AI_INFERENCE_SERVICE_URL or not QDRANT_URL:
     raise Exception("Missing required environment variables. Please set INTERNAL_API_KEY, AI_INFERENCE_SERVICE_URL, and QDRANT_URL.")
@@ -25,7 +24,6 @@ if not INTERNAL_API_KEY or not AI_INFERENCE_SERVICE_URL or not QDRANT_URL:
 # Initialize Qdrant client
 qdrant_client = QdrantClient(url=QDRANT_URL)
 
-# Middleware to validate incoming requests using the internal API key
 @app.middleware("http")
 async def validate_api_key(request: Request, call_next):
     auth_header = request.headers.get("Authorization")
@@ -33,11 +31,10 @@ async def validate_api_key(request: Request, call_next):
         raise HTTPException(status_code=401, detail="Unauthorized")
     return await call_next(request)
 
-# Endpoint to handle chat requests with RAG and streaming support
 @app.post("/chat")
 async def chat_handler(payload: dict):
     """
-    1. Receives a user query along with an optional "stream" flag.
+    1. Receives a user query with an optional "stream" flag.
     2. Embeds the query.
     3. Retrieves relevant document chunks from Qdrant.
     4. Assembles an augmented prompt.
@@ -48,10 +45,9 @@ async def chat_handler(payload: dict):
     if not query_text:
         raise HTTPException(status_code=400, detail="Missing 'query' field in payload.")
 
-    # Check if streaming response is requested; default is False.
     stream_requested = payload.get("stream", False)
 
-    # Step 1: Embed the query (placeholder implementation)
+    # Step 1: Embed the query (using embed_text, defined below)
     query_vector = embed_text(query_text)
 
     # Step 2: Retrieve relevant document chunks from Qdrant
@@ -59,70 +55,72 @@ async def chat_handler(payload: dict):
         search_results = qdrant_client.query_points(
             collection_name=COLLECTION_NAME,
             query=query_vector,
-            limit=3,  # Adjust the number of results as needed
+            limit=3,  # Adjust as needed
             with_payload=True
         ).points
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error querying Qdrant: {e}")
 
-    # Step 3: Extract context from retrieved results (assuming payload has a 'text' field)
-    context_chunks = [point.payload.get("text", "") for point in search_results if point.payload.get("text")]
+    # Step 3: Extract context from each ScoredPoint (using payload "text" only)
+    context_chunks = [
+        point.payload.get("page_content", "") 
+        for point in search_results 
+        if point.payload and "page_content" in point.payload
+    ]
     context = "\n".join(context_chunks)
 
-    # Step 4: Assemble the augmented prompt for the LLM
+    print("context:", context)
+
+    # Step 4: Assemble the augmented prompt.
     prompt = (
-        f"You are a knowledgeable STEM tutor. "
-        f"The user asked: \"{query_text}\"\n\n"
-        f"Relevant context from documents:\n{context}\n\n"
-        f"Please provide a detailed and accurate response."
+        "You are a helpful STEM tutor - please respond with as much detail as possible, and announce that you are one. " +
+        f"You are a knowledgeable STEM tutor. The user asked: \"{query_text}\"\n\n" +
+        f"Relevant context from documents:\n{context}\n\n" +
+        "Please provide a detailed and accurate response."
     )
 
-    # Step 5: Forward the augmented prompt to the AI Inference Service, with streaming if requested
+    # Step 5: Forward the prompt to the inference service.
     inference_result = await call_inference_service(prompt, stream=stream_requested)
-    
-    # Step 6: Return the final response to the user.
-    # If streaming, inference_result is a StreamingResponse; otherwise, it's a string.
+
+    # Step 6: Return the response.
     if stream_requested:
-        return inference_result  # Already a StreamingResponse
+        return inference_result
     else:
         return JSONResponse({"response": inference_result})
 
 def embed_text(text: str):
     """
-    Placeholder function to embed text.
-    Replace this with your actual embedding logic (e.g., calling an embedding API or using a local model).
+    Embed text using the globally defined embeddings instance.
     """
-    # For demonstration purposes, we return a dummy vector.
-    return [0.1, 0.2, 0.3, 0.4]
+    return embeddings.embed_query(text)
 
 async def call_inference_service(prompt: str, stream: bool = False):
     """
-    Forwards the augmented prompt to the ai-inference-service.
-    The inference service is responsible for calling the LLM (e.g., OpenAI ChatGPT API).
-    If 'stream' is True, returns a StreamingResponse; otherwise, returns a string response.
+    Forwards the prompt to the ai-inference-service.
+    If 'stream' is True, returns a StreamingResponse; otherwise, returns a string.
     """
     headers = {
         "Authorization": f"Bearer {INTERNAL_API_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Accept-Encoding": "identity"
     }
     data = {
         "model": "o1-mini",
         "messages": [
-            {"role": "system", "content": "You are a helpful STEM tutor."},
             {"role": "user", "content": prompt}
         ],
         "stream": stream
     }
-    async with httpx.AsyncClient(timeout=None) as client:
-        if stream:
-            # Add Accept header for streaming responses
-            headers["Accept"] = "text/event-stream"
-            async def stream_generator():
+    if stream:
+        headers["Accept"] = "text/event-stream"
+        async def stream_generator():
+            async with httpx.AsyncClient(timeout=None) as client:
                 async with client.stream("POST", AI_INFERENCE_SERVICE_URL, headers=headers, json=data) as response:
                     async for chunk in response.aiter_bytes():
                         yield chunk
-            return StreamingResponse(stream_generator(), media_type="text/event-stream")
-        else:
+        return StreamingResponse(stream_generator(), media_type="text/event-stream")
+    else:
+        async with httpx.AsyncClient(timeout=None) as client:
             try:
                 response = await client.post(AI_INFERENCE_SERVICE_URL, headers=headers, json=data)
                 response.raise_for_status()
@@ -132,3 +130,8 @@ async def call_inference_service(prompt: str, stream: bool = False):
                 raise HTTPException(status_code=response.status_code, detail=f"Inference service error: {exc.response.text}")
             result = response.json()
             return result.get("choices", [{}])[0].get("message", {}).get("content", "No response received.")
+
+# Initialize the global embeddings instance.
+from langchain_huggingface import HuggingFaceEmbeddings
+EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
