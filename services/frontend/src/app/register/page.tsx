@@ -24,15 +24,17 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch("/api/register", {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
       });
 
+      console.log("response", response);
+
       if (response.ok) {
         const data = await response.json();
-        const { token } = data; // Assume the server returns a token
+        const { token } = data;
         login(token); // Pass the JWT token to the login function
       } else {
         setError("Registration failed. Please try again.");
