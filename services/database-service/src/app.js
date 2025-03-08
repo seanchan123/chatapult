@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import morgan from 'morgan';
 
 import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(morgan('combined'));
 app.use(express.json());
 
 // Mount routes
+app.use('/api/auth', authRoutes);
 app.use('/api/chats', chatRoutes);
 
 // Global error handler
