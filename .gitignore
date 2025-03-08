@@ -71,3 +71,6 @@ Thumbs.db
 # Local env files
 *.pem
 *.key
+
+# Documents in ai-dialogue-service
+documents/
