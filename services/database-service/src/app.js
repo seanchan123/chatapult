@@ -5,7 +5,6 @@ import morgan from 'morgan';
 import cors from 'cors';
 
 import connectDB from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 
 dotenv.config();
@@ -28,7 +27,6 @@ app.use(cors({
 }));
 
 // Mount routes
-app.use('/api/auth', authRoutes);
 app.use('/api/chats', chatRoutes);
 
 // Global error handler
