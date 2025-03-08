@@ -18,14 +18,14 @@ connectDB();
 // Use morgan to log requests
 app.use(morgan('combined'));
 
+// Middleware to parse JSON
+app.use(express.json());
+
 // Allow requests from frontend
 app.use(cors({
   origin: "http://localhost:3000",
   credentials: true,
 }));
-
-// Middleware to parse JSON
-app.use(express.json());
 
 // Mount routes
 app.use('/api/auth', authRoutes);
