@@ -2,7 +2,10 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { useContext, useState, useEffect } from "react";
+
+import { AuthContext } from "@/contexts/AuthContext";
 
 interface Chat {
   id: string;
@@ -18,6 +21,9 @@ interface Folder {
 }
 
 const ChatsPage: React.FC = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+  
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [folders, setFolders] = useState<Folder[]>([
     { id: "1", name: "Machine Learning", chats: [] },
@@ -85,8 +91,17 @@ const ChatsPage: React.FC = () => {
       tags: ["Eagle", "Sambo", "GOAT"],
     },
   ]);
-
   const [draggingChat, setDraggingChat] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
+  
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const handleDragStart = (chatId: string) => {
     setDraggingChat(chatId);
