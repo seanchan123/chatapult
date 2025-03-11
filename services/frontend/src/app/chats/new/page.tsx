@@ -2,7 +2,10 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation"; 
+import React, { useEffect, useRef, useState, useContext } from "react";
+
+import { AuthContext } from "@/contexts/AuthContext";
 
 interface Message {
   id: number;
@@ -12,6 +15,8 @@ interface Message {
 }
 
 const NewChat: React.FC = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -23,6 +28,27 @@ const NewChat: React.FC = () => {
   const [inputValue, setInputValue] = useState<string>("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Function to scroll to the bottom of the chat
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
+
+  // Scroll to the bottom whenever a new message is added
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  if (!isAuthenticated) {
+    return null; 
+  }
 
   // Function to handle sending a new message
   const handleSendMessage = () => {
@@ -63,16 +89,6 @@ const NewChat: React.FC = () => {
       handleSendMessage();
     }
   };
-
-  // Function to scroll to the bottom of the chat
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Scroll to the bottom whenever a new message is added
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   return (
     <div className="min-h-screen flex flex-row justify-between p-4 space-x-4 pt-20">

@@ -10,6 +10,7 @@ const Dashboard: React.FC = () => {
   const { isAuthenticated } = useContext(AuthContext);
   const router = useRouter();
 
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");

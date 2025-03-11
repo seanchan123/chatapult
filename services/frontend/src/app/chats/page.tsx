@@ -22,7 +22,6 @@ interface Folder {
 
 const ChatsPage: React.FC = () => {
   const { isAuthenticated } = useContext(AuthContext);
-  
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [folders, setFolders] = useState<Folder[]>([
@@ -93,6 +92,7 @@ const ChatsPage: React.FC = () => {
   ]);
   const [draggingChat, setDraggingChat] = useState<string | null>(null);
   
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
