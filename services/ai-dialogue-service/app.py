@@ -3,7 +3,7 @@
 
 import os
 import httpx
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from dotenv import load_dotenv
@@ -35,6 +35,8 @@ qdrant_client = QdrantClient(url=QDRANT_URL)
 
 @app.middleware("http")
 async def validate_api_key(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
     auth_header = request.headers.get("Authorization")
     if auth_header != f"Bearer {INTERNAL_API_KEY}":
         raise HTTPException(status_code=401, detail="Unauthorized")
