@@ -3,8 +3,8 @@ import Chat from '../models/Chat.js';
 
 export const createChat = async (req, res) => {
   try {
-    const { userId, folderId, chatId, messages } = req.body;
-    const chat = new Chat({ userId, folderId, chatId, messages });
+    const { userId, folderId, chatId, chatName, messages } = req.body;
+    const chat = new Chat({ userId, folderId, chatId, chatName, messages });
     await chat.save();
     res.status(201).json(chat);
   } catch (error) {
