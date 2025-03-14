@@ -2,49 +2,49 @@
 "use client";
 
 import Link from "next/link";
+import Cookies from 'js-cookie';
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState, useContext } from "react";
 
 import { AuthContext } from "@/contexts/AuthContext";
 
-// Define the Message interface.
+// Define the Message interface
 interface Message {
   id: number;
   text: string;
   sender: "user" | "system";
-  timestamp: string;
+  timestamp: Date;
 }
 
 const NewChat: React.FC = () => {
   const { isAuthenticated } = useContext(AuthContext);
   const router = useRouter();
 
-  // State to hold the conversation messages.
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       text: "Welcome to your new chat. Ask a question to get started.",
       sender: "system",
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: new Date(),
     },
   ]);
   const [inputValue, setInputValue] = useState<string>("");
   const [streaming, setStreaming] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Utility function to scroll to bottom.
+
+  // Utility function to scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Always call hooks in the same order.
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
     }
   }, [isAuthenticated, router]);
 
-  // Scroll to the bottom on new messages.
+  // Scroll to the bottom on new messages
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -53,16 +53,16 @@ const NewChat: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  // Utility function to generate a GUID.
+  // Utility function to generate a GUID
   const generateGUID = (): string => {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
       const r = Math.random() * 16 | 0,
-        v = c === 'x' ? r : (r & 0x3 | 0x8);
+            v = c === 'x' ? r : (r & 0x3 | 0x8);
       return v.toString(16);
     });
   };
 
-  // Function to call the AI Dialogue Service.
+  // Function to call the AI Dialogue Service
   const getAIResponse = async (query: string, stream: boolean): Promise<string> => {
     const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
     if (!url) throw new Error("AI Dialogue Service URL not defined in env");
@@ -81,22 +81,23 @@ const NewChat: React.FC = () => {
     return data.response;
   };
 
-  // Function to save the complete chat conversation.
-  const saveChat = async () => {
-    const url = process.env.NEXT_PUBLIC_AI_DATABASE_SERVICE_URL;
-    if (!url) throw new Error("Database Service URL not defined in env");
+  // Function to save the complete chat conversation
+  const saveChat = async (conversation: Message[]) => {
     const chatId = generateGUID();
     const chatData = {
-      userId: "unknown",
+      userId: "unknown", // Replace with actual userId if available from AuthContext
       folderId: "", // Initially no folder
       chatName: "New Chat",
       chatId,
-      messages,
+      messages: conversation,
     };
 
-    const response = await fetch(url + "/api/chats", {
+    const response = await fetch("http://127.0.0.1:5000/api/chats", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${Cookies.get('authToken')}`
+       },
       body: JSON.stringify(chatData),
     });
 
@@ -107,34 +108,37 @@ const NewChat: React.FC = () => {
     }
   };
 
-  // Handler for sending a message.
+  // Handler for sending a message
   const handleSendMessage = async () => {
     if (inputValue.trim() === "") return;
-    const currentTime = new Date().toLocaleTimeString();
+    const currentTime = new Date();
 
-    // Append the user's message.
+    // Create user's message and compute updated conversation
     const userMessage: Message = {
       id: messages.length + 1,
       text: inputValue,
       sender: "user",
       timestamp: currentTime,
     };
-    setMessages((prev) => [...prev, userMessage]);
-    const query = inputValue; // Save the query before clearing input
+    const updatedAfterUser = [...messages, userMessage];
+    setMessages(updatedAfterUser);
+    const query = inputValue; // Save query before clearing input
     setInputValue("");
 
     try {
       // Call the AI Dialogue Service.
       const aiResponse = await getAIResponse(query, streaming);
       const systemMessage: Message = {
-        id: messages.length + 2,
+        id: updatedAfterUser.length + 1,
         text: aiResponse,
         sender: "system",
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, systemMessage]);
-      // Save the entire conversation in the database.
-      await saveChat();
+      // Create the updated conversation including the system response.
+      const updatedConversation = [...updatedAfterUser, systemMessage]
+      setMessages(updatedConversation);
+      // Save the conversation to the database.
+      await saveChat(updatedConversation);
     } catch (error) {
       console.error(error);
     }
@@ -179,7 +183,7 @@ const NewChat: React.FC = () => {
             >
               <div className="flex flex-col items-start">
                 <div className="text-xs text-gray-500 mt-4 mb-0.5">
-                  {message.timestamp}
+                  {new Date(message.timestamp).toLocaleTimeString()}
                 </div>
                 <div
                   className={`mb-4 p-4 max-w-md w-auto break-words ${
