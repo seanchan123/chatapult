@@ -5,46 +5,60 @@ import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import React, { createContext, useState, useEffect } from 'react';
 
+interface UserData {
+  username: string;
+  token: string;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (token: string) => void; // Accept the JWT token on login
+  user: UserData | null;
+  login: (token: string, username: string) => void;
   logout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
+  user: null,
   login: () => {},
   logout: () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<UserData | null>(null);
   const router = useRouter();
 
   // Check authentication status on mount
   useEffect(() => {
-    const token = Cookies.get('authToken'); // Check if the token exists in cookies
-    if (token) {
-      setIsAuthenticated(true); // Set user as authenticated if token exists
+    const token = Cookies.get('authToken');
+    const username = Cookies.get('username');
+    if (token && username) {
+      setIsAuthenticated(true);
+      setUser({ token, username });
     }
   }, []);
 
-  const login = (token: string) => {
-    // After successful login from backend, store the JWT token:
-    Cookies.set('authToken', token, { expires: 1 }); // Store JWT token in cookies (1 day expiration)
+  const login = (token: string, username: string) => {
+    // Store JWT token and username in cookies
+    Cookies.set('authToken', token, { expires: 1 });
+    Cookies.set('username', username, { expires: 1 });
     setIsAuthenticated(true);
+    setUser({ token, username });
     router.push('/dashboard');
   };
 
   const logout = () => {
-    // Remove the JWT token from cookies on logout
+    // Remove token and username from cookies
     Cookies.remove('authToken');
+    Cookies.remove('username');
     setIsAuthenticated(false);
+    setUser(null);
     router.push('/');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
