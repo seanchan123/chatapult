@@ -3,7 +3,8 @@
 
 import os
 import httpx
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
@@ -11,6 +12,14 @@ from qdrant_client import QdrantClient
 load_dotenv()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Environment variables
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
@@ -76,9 +85,6 @@ async def chat_handler(payload: dict):
             sources.add(src)
     context = "\n".join(context_chunks)
     sources_str = ", ".join(sorted(sources)) if sources else "Unknown"
-
-    print("context:", context)
-    print("sources:", sources_str)
 
     # Step 4: Assemble the augmented prompt.
     prompt = (
