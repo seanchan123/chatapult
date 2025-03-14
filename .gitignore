@@ -73,3 +73,6 @@ Thumbs.db
 
 # Documents in ai-dialogue-service
 documents/
+
+# Qdrant Storage in ai-dialogue-service
+qdrant_storage/
