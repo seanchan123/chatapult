@@ -9,7 +9,7 @@ const messageSchema = new mongoose.Schema({
 
 const chatSchema = new mongoose.Schema({
   userId: { type: String, required: true },
-  folderId: { type: String, required: true },
+  folderId: { type: String, required: false },
   chatId: { type: String, required: true },
   messages: [messageSchema],
   createdAt: { type: Date, default: Date.now }
