@@ -2,11 +2,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState, useContext } from "react";
 
 import { AuthContext } from "@/contexts/AuthContext";
 
+// Define the Message interface.
 interface Message {
   id: number;
   text: string;
@@ -17,67 +18,126 @@ interface Message {
 const NewChat: React.FC = () => {
   const { isAuthenticated } = useContext(AuthContext);
   const router = useRouter();
+
+  // State to hold the conversation messages.
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! How can I assist you today?",
+      text: "Welcome to your new chat. Ask a question to get started.",
       sender: "system",
       timestamp: new Date().toLocaleTimeString(),
     },
   ]);
   const [inputValue, setInputValue] = useState<string>("");
-
+  const [streaming, setStreaming] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Function to scroll to the bottom of the chat
+  
+  // Utility function to scroll to bottom.
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Redirect to login if not authenticated
+  // Always call hooks in the same order.
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
     }
   }, [isAuthenticated, router]);
 
-  // Scroll to the bottom whenever a new message is added
+  // Scroll to the bottom on new messages.
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   if (!isAuthenticated) {
-    return null; 
+    return <div>Loading...</div>;
   }
 
-  // Function to handle sending a new message
-  const handleSendMessage = () => {
-    if (inputValue.trim() === "") return;
+  // Utility function to generate a GUID.
+  const generateGUID = (): string => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0,
+        v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
 
+  // Function to call the AI Dialogue Service.
+  const getAIResponse = async (query: string, stream: boolean): Promise<string> => {
+    const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
+    if (!url) throw new Error("AI Dialogue Service URL not defined in env");
+    const response = await fetch(url + "/chat", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_API_KEY}`
+      },
+      body: JSON.stringify({ query, stream }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to get AI response");
+    }
+    const data = await response.json();
+    return data.response;
+  };
+
+  // Function to save the complete chat conversation.
+  const saveChat = async () => {
+    const url = process.env.NEXT_PUBLIC_AI_DATABASE_SERVICE_URL;
+    if (!url) throw new Error("Database Service URL not defined in env");
+    const chatId = generateGUID();
+    const chatData = {
+      userId: "unknown",
+      folderId: "", // Initially no folder
+      chatName: "New Chat",
+      chatId,
+      messages,
+    };
+
+    const response = await fetch(url + "/api/chats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(chatData),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to save chat");
+    } else {
+      console.log("Chat saved successfully");
+    }
+  };
+
+  // Handler for sending a message.
+  const handleSendMessage = async () => {
+    if (inputValue.trim() === "") return;
     const currentTime = new Date().toLocaleTimeString();
 
-    // Add the user's message
-    const newMessage: Message = {
+    // Append the user's message.
+    const userMessage: Message = {
       id: messages.length + 1,
       text: inputValue,
       sender: "user",
       timestamp: currentTime,
     };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    // Clear the input field
+    setMessages((prev) => [...prev, userMessage]);
+    const query = inputValue; // Save the query before clearing input
     setInputValue("");
 
-    // Simulate a system response (e.g., typing back after a delay)
-    setTimeout(() => {
+    try {
+      // Call the AI Dialogue Service.
+      const aiResponse = await getAIResponse(query, streaming);
       const systemMessage: Message = {
         id: messages.length + 2,
-        text: "This is a simulated response.",
+        text: aiResponse,
         sender: "system",
         timestamp: new Date().toLocaleTimeString(),
       };
-      setMessages((prevMessages) => [...prevMessages, systemMessage]);
-    }, 1000);
+      setMessages((prev) => [...prev, systemMessage]);
+      // Save the entire conversation in the database.
+      await saveChat();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,6 +148,10 @@ const NewChat: React.FC = () => {
     if (e.key === "Enter") {
       handleSendMessage();
     }
+  };
+
+  const toggleStreaming = () => {
+    setStreaming((prev) => !prev);
   };
 
   return (
@@ -153,7 +217,14 @@ const NewChat: React.FC = () => {
       </div>
 
       {/* Right Panel */}
-      <div className="hidden lg:block lg:w-1/6 sm:p-4 sm:pt-14 sm:pb-22 md:pb-28"></div>
+      <div className="hidden lg:block lg:w-1/6 sm:p-4 sm:pt-14 sm:pb-22 md:pb-28">
+        <button
+          onClick={toggleStreaming}
+          className="mt-0 px-4 py-3 rounded-md text-sm font-medium text-gray-800 hover:bg-indigo-400 dark:text-gray-100 dark:bg-transparent dark:hover:bg-indigo-900"
+        >
+        Streaming Response: {streaming ? "On" : "Off"}
+      </button>
+      </div>
     </div>
   );
 };
