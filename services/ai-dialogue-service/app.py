@@ -16,7 +16,7 @@ app = FastAPI()
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
 AI_INFERENCE_SERVICE_URL = os.getenv("AI_INFERENCE_SERVICE_URL")  # e.g., http://localhost:8080/v1/chat/completions
 QDRANT_URL = os.getenv("QDRANT_URL")  # e.g., http://localhost:6333
-COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "EDE")  # e.g., "EDE"
+COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "Chatapult")
 
 if not INTERNAL_API_KEY or not AI_INFERENCE_SERVICE_URL or not QDRANT_URL:
     raise Exception("Missing required environment variables. Please set INTERNAL_API_KEY, AI_INFERENCE_SERVICE_URL, and QDRANT_URL.")
