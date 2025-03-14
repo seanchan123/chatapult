@@ -2,7 +2,6 @@
 "use client";
 
 import Link from "next/link";
-import Cookies from 'js-cookie';
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState, useContext } from "react";
 
@@ -17,7 +16,7 @@ interface Message {
 }
 
 const NewChat: React.FC = () => {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, user } = useContext(AuthContext);
   const router = useRouter();
 
   const [messages, setMessages] = useState<Message[]>([
@@ -83,20 +82,22 @@ const NewChat: React.FC = () => {
 
   // Function to save the complete chat conversation
   const saveChat = async (conversation: Message[]) => {
+    const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+    if (!url) throw new Error("AI Dialogue Service URL not defined in env");
     const chatId = generateGUID();
     const chatData = {
-      userId: "unknown", // Replace with actual userId if available from AuthContext
+      userId: user?.username || "unknown",
       folderId: "", // Initially no folder
       chatName: "New Chat",
       chatId,
       messages: conversation,
     };
 
-    const response = await fetch("http://127.0.0.1:5000/api/chats", {
+    const response = await fetch(url + "/api/chats", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${Cookies.get('authToken')}`
+        "Authorization": `Bearer ${user?.token}`
        },
       body: JSON.stringify(chatData),
     });
