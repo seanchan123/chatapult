@@ -244,7 +244,7 @@ const ExistingChat: React.FC = () => {
     // Add placeholder for AI response
     const placeholderSystemMessage: Message = {
       id: updatedAfterUser.length + 1,
-      text: "",
+      text: "Loading...",
       sender: "system",
       timestamp: new Date(),
     };
@@ -333,7 +333,11 @@ const ExistingChat: React.FC = () => {
                       : "bg-white text-gray-700 dark:bg-gray-600 dark:text-gray-100 rounded-tl-xl rounded-tr-xl rounded-br-xl"
                   }`}
                 >
-                  {message.text}
+                  {message.sender === "system" && message.text === "Loading..." ? (
+                    <em>{message.text}</em>
+                  ) : (
+                    message.text
+                  )}
                 </div>
               </div>
             </div>
