@@ -51,3 +51,16 @@ export const updateChat = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const deleteChat = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const deletedChat = await Chat.findOneAndDelete({ chatId });
+    if (!deletedChat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+    res.json({ message: 'Chat deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
