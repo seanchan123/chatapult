@@ -1,9 +1,10 @@
-// src/app/chats/new/page.tsx
+// src/app/chats/[chat_id]/page.tsx
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
+import { AuthContext } from "@/contexts/AuthContext";
 
 interface Message {
   id: number;
@@ -12,50 +13,160 @@ interface Message {
   timestamp: string;
 }
 
+interface ChatResponse {
+  messages: Message[];
+}
+
 const ExistingChat: React.FC = () => {
-  const { chat_id } = useParams();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Hello! How can I assist you today?",
-      sender: "system",
-      timestamp: new Date().toLocaleTimeString(),
-    },
-  ]);
-  const [inputValue, setInputValue] = useState<string>("");
+  const { isAuthenticated, user } = React.useContext(AuthContext);
+  const router = useRouter();
+  const { chat_id } = useParams() as { chat_id: string };
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editText, setEditText] = useState<string>("");
-
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Function to handle sending a new message
-  const handleSendMessage = () => {
-    if (inputValue.trim() === "") return;
+  // Utility function to scroll to the bottom of the chat
+  const scrollToBottom = (): void => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
+
+  // Fetch the chat conversation from the database.
+  useEffect(() => {
+    // Define the async function inside the effect
+    const fetchChat = async (): Promise<void> => {
+      try {
+        const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+        if (!url) throw new Error("Database Service URL not defined in env");
+  
+        const response = await fetch(`${url}/api/chats/${chat_id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${user?.token}`,
+          },
+        });
+  
+        if (response.ok) {
+          const data: ChatResponse = await response.json();
+          const loadedMessages: Message[] = data.messages.map((m: Message) => ({
+            id: m.id,
+            text: m.text,
+            sender: m.sender,
+            timestamp: new Date(m.timestamp).toLocaleTimeString(),
+          }));
+          setMessages(loadedMessages);
+        } else {
+          console.error("Failed to fetch chat");
+        }
+      } catch (error) {
+        console.error("Error fetching chat:", error);
+      }
+    };
+  
+    // Call fetchChat if the user is authenticated
+    if (isAuthenticated) {
+      fetchChat();
+    }
+    // The dependency array includes isAuthenticated, chat_id, and user?.token
+  }, [isAuthenticated, chat_id, user?.token]);
+  
+  // Scroll to the bottom whenever messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  if (!isAuthenticated) {
+    return <div>Loading...</div>;
+  }
+
+  // Handler for sending a new message.
+  const handleSendMessage = async (): Promise<void> => {
+    if (!inputValue.trim()) return;
     const currentTime = new Date().toLocaleTimeString();
 
-    // Add the user's message
-    const newMessage: Message = {
+    // Append the user's message.
+    const userMessage: Message = {
       id: messages.length + 1,
       text: inputValue,
       sender: "user",
       timestamp: currentTime,
     };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    // Clear the input field
+    const updatedConversation = [...messages, userMessage];
+    setMessages(updatedConversation);
     setInputValue("");
 
-    // Simulate a system response (e.g., typing back after a delay)
-    setTimeout(() => {
+    try {
+      // Call the AI Dialogue Service (non-streaming in this example)
+      const aiUrl = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
+      if (!aiUrl) throw new Error("AI Dialogue Service URL not defined in env");
+
+      const aiResponseRes = await fetch(aiUrl + "/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_API_KEY}`,
+        },
+        body: JSON.stringify({ query: userMessage.text, stream: false }),
+      });
+
+      if (!aiResponseRes.ok) {
+        throw new Error(`Request failed with status ${aiResponseRes.status}`);
+      }
+      const aiData = await aiResponseRes.json();
       const systemMessage: Message = {
-        id: messages.length + 2,
-        text: "This is a simulated response.",
+        id: updatedConversation.length + 1,
+        text: aiData.response,
         sender: "system",
         timestamp: new Date().toLocaleTimeString(),
       };
-      setMessages((prevMessages) => [...prevMessages, systemMessage]);
-    }, 1000);
+
+      const newConversation = [...updatedConversation, systemMessage];
+      setMessages(newConversation);
+      await updateChat(newConversation);
+    } catch (error) {
+      console.error("Error in handleSendMessage:", error);
+    }
+  };
+
+  // PUT updated chat conversation to the database.
+  const updateChat = async (conversation: Message[]): Promise<void> => {
+    try {
+      const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+      if (!url) throw new Error("Database Service URL not defined in env");
+
+      const chatData = {
+        messages: conversation.map((m) => ({
+          ...m,
+          timestamp: new Date(m.timestamp).toISOString(),
+        })),
+      };
+
+      const response = await fetch(`${url}/api/chats/${chat_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user?.token}`,
+        },
+        body: JSON.stringify(chatData),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to update chat");
+      } else {
+        console.log("Chat updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating chat:", error);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,17 +178,7 @@ const ExistingChat: React.FC = () => {
       handleSendMessage();
     }
   };
-
-  // Function to scroll to the bottom of the chat
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Scroll to the bottom whenever a new message is added
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
+  
   // Handle modal open/close
   const handleEditClick = () => {
     setIsModalOpen(true);
@@ -112,9 +213,7 @@ const ExistingChat: React.FC = () => {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex w-full ${
-                message.sender === "user" ? "justify-end" : "justify-start"
-              }`}
+              className={`flex w-full ${message.sender === "user" ? "justify-end" : "justify-start"}`}
             >
               <div className="flex flex-col items-start">
                 <div className="text-xs text-gray-500 mt-4 mb-0.5">
