@@ -111,7 +111,7 @@ Use tools like Postman or cURL to send requests to your endpoints.
     curl -X POST http://localhost:5000/api/chats \
         -H "Content-Type: application/json" \
         -d '{
-        "userId": "user123",
+        "username": "user123",
         "folderId": "folderA",
         "chatId": "chat001",
         "messages": [

@@ -171,7 +171,7 @@ const NewChat: React.FC = () => {
     const chatId = generateGUID();
     const currentTimestamp = new Date().toISOString();
     const chatData = {
-      userId: user?.username || "unknown",
+      username: user?.username || "unknown",
       folderId: "",
       chatName: `Chat (${currentTimestamp})`,
       chatId,
