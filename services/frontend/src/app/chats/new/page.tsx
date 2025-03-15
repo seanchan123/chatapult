@@ -7,12 +7,27 @@ import React, { useEffect, useRef, useState, useContext } from "react";
 
 import { AuthContext } from "@/contexts/AuthContext";
 
-// Define the Message interface
 interface Message {
   id: number;
   text: string;
   sender: "user" | "system";
   timestamp: Date;
+}
+
+interface ChatCompletionChunk {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  service_tier: string;
+  system_fingerprint: string;
+  choices: Array<{
+    index: number;
+    delta: {
+      content?: string;
+    };
+    finish_reason: string | null;
+  }>;
 }
 
 const NewChat: React.FC = () => {
@@ -31,7 +46,7 @@ const NewChat: React.FC = () => {
   const [streaming, setStreaming] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Utility function to scroll to bottom
+  // Scroll to bottom utility
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -43,7 +58,7 @@ const NewChat: React.FC = () => {
     }
   }, [isAuthenticated, router]);
 
-  // Scroll to the bottom on new messages
+  // Scroll on new messages
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -54,67 +69,130 @@ const NewChat: React.FC = () => {
 
   // Utility function to generate a GUID
   const generateGUID = (): string => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = Math.random() * 16 | 0,
-            v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   };
 
-  // Function to call the AI Dialogue Service
-  const getAIResponse = async (query: string, stream: boolean): Promise<string> => {
+  const getAIResponseStream = async (
+    query: string,
+    onChunk: (partialText: string) => void
+  ): Promise<string> => {
     const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
     if (!url) throw new Error("AI Dialogue Service URL not defined in env");
+  
     const response = await fetch(url + "/chat", {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_API_KEY}`
+        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_API_KEY}`,
       },
-      body: JSON.stringify({ query, stream }),
+      body: JSON.stringify({ query, stream: true }),
     });
     if (!response.ok) {
-      throw new Error("Failed to get AI response");
+      throw new Error(`Streaming request failed with status ${response.status}`);
+    }
+  
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("ReadableStream not supported");
+    }
+    const decoder = new TextDecoder("utf-8");
+    let done = false;
+    let accumulated = "";
+  
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      if (value) {
+        const rawString = decoder.decode(value, { stream: !doneReading });
+        // Split the raw chunk into lines in case multiple JSON objects come in one chunk.
+        const lines = rawString.split("\n");
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine) continue;
+          if (trimmedLine.startsWith("data:")) {
+            // Remove the 'data:' prefix.
+            const jsonString = trimmedLine.slice("data:".length).trim();
+            if (jsonString === "[DONE]") {
+              done = true;
+              break;
+            }
+            try {
+              const parsed: ChatCompletionChunk = JSON.parse(jsonString);
+              const content = parsed.choices?.[0]?.delta?.content || "";
+              accumulated += content;
+              
+              // Update the UI via the onChunk callback.
+              onChunk(accumulated);
+            } catch (err) {
+              console.error("Error parsing JSON:", err, "from line:", trimmedLine);
+            }
+          }
+        }
+      }
+    }
+    return accumulated;
+  };
+
+  const getAIResponse = async (query: string): Promise<string> => {
+    const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
+    if (!url) throw new Error("AI Dialogue Service URL not defined in env");
+
+    const response = await fetch(url + "/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_API_KEY}`,
+      },
+      body: JSON.stringify({ query, stream: false }),
+    });
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
     }
     const data = await response.json();
     return data.response;
   };
 
-  // Function to save the complete chat conversation
   const saveChat = async (conversation: Message[]) => {
     const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
-    if (!url) throw new Error("AI Dialogue Service URL not defined in env");
+    if (!url) throw new Error("Database Service URL not defined in env");
+
     const chatId = generateGUID();
+    const currentTimestamp = new Date().toISOString();
     const chatData = {
-      userId: user?.username,
-      folderId: "", // Initially no folder
-      chatName: "New Chat",
+      userId: user?.username || "unknown",
+      folderId: "",
+      chatName: `Chat (${currentTimestamp})`,
       chatId,
-      messages: conversation,
+      messages: conversation.map((m) => ({
+        ...m,
+        timestamp: m.timestamp.toISOString(),
+      })),
     };
 
-    const response = await fetch(url + "/api/chats", {
+    const res = await fetch(url + "/api/chats", {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${user?.token}`
-       },
+        "Authorization": `Bearer ${user?.token}`,
+      },
       body: JSON.stringify(chatData),
     });
-
-    if (!response.ok) {
+    if (!res.ok) {
       console.error("Failed to save chat");
     } else {
       console.log("Chat saved successfully");
     }
   };
 
-  // Handler for sending a message
   const handleSendMessage = async () => {
-    if (inputValue.trim() === "") return;
+    if (!inputValue.trim()) return;
     const currentTime = new Date();
 
-    // Create user's message and compute updated conversation
+    // Append user's message.
     const userMessage: Message = {
       id: messages.length + 1,
       text: inputValue,
@@ -123,25 +201,45 @@ const NewChat: React.FC = () => {
     };
     const updatedAfterUser = [...messages, userMessage];
     setMessages(updatedAfterUser);
-    const query = inputValue; // Save query before clearing input
+    const userQuery = inputValue;
     setInputValue("");
 
+    // Add a placeholder system message to update with streaming text.
+    const placeholderSystemMessage: Message = {
+      id: updatedAfterUser.length + 1,
+      text: "",
+      sender: "system",
+      timestamp: new Date(),
+    };
+    let updatedConversation = [...updatedAfterUser, placeholderSystemMessage];
+    setMessages(updatedConversation);
+
     try {
-      // Call the AI Dialogue Service.
-      const aiResponse = await getAIResponse(query, streaming);
-      const systemMessage: Message = {
-        id: updatedAfterUser.length + 1,
-        text: aiResponse,
-        sender: "system",
-        timestamp: new Date(),
-      };
-      // Create the updated conversation including the system response.
-      const updatedConversation = [...updatedAfterUser, systemMessage]
-      setMessages(updatedConversation);
-      // Save the conversation to the database.
-      await saveChat(updatedConversation);
+      if (!streaming) {
+        // Non-streaming: get full response at once.
+        const fullText = await getAIResponse(userQuery);
+        updatedConversation = updatedConversation.map((msg) =>
+          msg.id === placeholderSystemMessage.id ? { ...msg, text: fullText } : msg
+        );
+        setMessages(updatedConversation);
+      } else {
+        // Streaming: update the placeholder as chunks arrive.
+        await getAIResponseStream(userQuery, (partialText) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === placeholderSystemMessage.id
+                ? { ...msg, text: partialText }
+                : msg
+            )
+          );
+        });
+      }
+      // Save the conversation after a brief delay to allow state to update.
+      setTimeout(() => {
+        saveChat([...messages]);
+      }, 500);
     } catch (error) {
-      console.error(error);
+      console.error("Error in handleSendMessage:", error);
     }
   };
 
@@ -174,7 +272,6 @@ const NewChat: React.FC = () => {
       {/* Center (Chat) Panel */}
       <div className="flex-1 flex flex-col justify-between py-4 sm:p-4 rounded-lg">
         <div className="flex-1 overflow-y-auto pt-4 sm:p-4 sm:pb-16 md:pb-20">
-          {/* Chat Message Area */}
           {messages.map((message) => (
             <div
               key={message.id}
@@ -198,7 +295,6 @@ const NewChat: React.FC = () => {
               </div>
             </div>
           ))}
-          {/* Scroll to bottom reference */}
           <div ref={messagesEndRef} />
         </div>
 
@@ -227,8 +323,8 @@ const NewChat: React.FC = () => {
           onClick={toggleStreaming}
           className="mt-0 px-4 py-3 rounded-md text-sm font-medium text-gray-800 hover:bg-indigo-400 dark:text-gray-100 dark:bg-transparent dark:hover:bg-indigo-900"
         >
-        Streaming Response: {streaming ? "On" : "Off"}
-      </button>
+          Streaming Response: {streaming ? "On" : "Off"}
+        </button>
       </div>
     </div>
   );
