@@ -77,10 +77,7 @@ const NewChat: React.FC = () => {
   };
 
   // Streaming response reader
-  const getAIResponseStream = async (
-    query: string,
-    onChunk: (partialText: string) => void
-  ): Promise<string> => {
+  const getAIResponseStream = async (query: string): Promise<string> => {
     const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
     if (!url) throw new Error("AI Dialogue Service URL not defined in env");
   
@@ -122,9 +119,20 @@ const NewChat: React.FC = () => {
               const parsed: ChatCompletionChunk = JSON.parse(jsonString);
               const content = parsed.choices?.[0]?.delta?.content || "";
               accumulated += content;
-
-              // Update the UI via the onChunk callback.
-              onChunk(accumulated);
+              // Update the UI by modifying the last message (placeholder) with accumulated text.
+              setMessages(prev => {
+                const updated = [...prev];
+                if (updated.length > 0) {
+                  updated[updated.length - 1] = {
+                    ...updated[updated.length - 1],
+                    text: accumulated,
+                    timestamp: new Date(),
+                  };
+                }
+                return updated;
+              });
+              // Yield control for UI update.
+              await new Promise(resolve => setTimeout(resolve, 0));
             } catch (err) {
               console.error("Error parsing JSON:", err, "from line:", trimmedLine);
             }
@@ -214,22 +222,18 @@ const NewChat: React.FC = () => {
       timestamp: new Date(),
     };
 
+    // Append the placeholder to state (only once)
+    const updatedConversation = [...updatedAfterUser, placeholderSystemMessage];
+    setMessages(updatedConversation);
+
     try {
       let finalResponse = "";
       if (!streaming) {
         finalResponse = await getAIResponse(userQuery);
       } else {
-        finalResponse = await getAIResponseStream(userQuery, (partialText) => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === placeholderSystemMessage.id
-                ? { ...msg, text: partialText, timestamp: new Date() }
-                : msg
-            )
-          );
-        });
+        finalResponse = await getAIResponseStream(userQuery);
       }
-      // Create a final conversation array using the final response.
+      // Build final conversation array using the final response.
       const finalConversation = [
         ...updatedAfterUser,
         { ...placeholderSystemMessage, text: finalResponse, timestamp: new Date() },
@@ -274,9 +278,7 @@ const NewChat: React.FC = () => {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex w-full ${
-                message.sender === "user" ? "justify-end" : "justify-start"
-              }`}
+              className={`flex w-full ${message.sender === "user" ? "justify-end" : "justify-start"}`}
             >
               <div className="flex flex-col items-start">
                 <div className="text-xs text-gray-500 mt-4 mb-0.5">
@@ -330,4 +332,3 @@ const NewChat: React.FC = () => {
 };
 
 export default NewChat;
-
