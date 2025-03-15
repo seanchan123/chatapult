@@ -215,7 +215,7 @@ const ExistingChat: React.FC = () => {
         })),
       };
 
-      const response = await fetch(`${url}/api/chats/${chat_id}`, {
+      const response = await fetch(`${url}/api/chats/${chat_id}/messages`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

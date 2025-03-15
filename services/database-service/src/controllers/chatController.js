@@ -25,12 +25,11 @@ export const getChat = async (req, res) => {
   }
 };
 
-export const updateChat = async (req, res) => {
+export const updateChatMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
     const { messages } = req.body;
 
-    // Optionally convert message timestamps from strings to Date objects.
     const convertedMessages = messages.map((m) => ({
       ...m,
       timestamp: new Date(m.timestamp),
