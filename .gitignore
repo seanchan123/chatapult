@@ -72,7 +72,7 @@ Thumbs.db
 *.key
 
 # Documents in ai-dialogue-service
-documents/
+/services/ai-dialogue-service/documents/
 
 # Qdrant Storage in ai-dialogue-service
-qdrant_storage/
+/services/ai-dialogue-service/qdrant_storage/
