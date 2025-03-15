@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
+
 import { AuthContext } from "@/contexts/AuthContext";
 
 interface Message {
@@ -41,7 +42,7 @@ const ExistingChat: React.FC = () => {
   const [editText, setEditText] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
-    const [streaming, setStreaming] = useState<boolean>(false);
+  const [streaming, setStreaming] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Utility function to scroll to the bottom of the chat
