@@ -86,7 +86,7 @@ const NewChat: React.FC = () => {
     if (!url) throw new Error("AI Dialogue Service URL not defined in env");
     const chatId = generateGUID();
     const chatData = {
-      userId: user?.username || "unknown",
+      userId: user?.username,
       folderId: "", // Initially no folder
       chatName: "New Chat",
       chatId,
