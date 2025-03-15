@@ -6,6 +6,7 @@ import cors from 'cors';
 
 import connectDB from './config/db.js';
 import chatRoutes from './routes/chatRoutes.js';
+import folderRoutes from './routes/folderRoutes.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use(cors({
 
 // Mount routes
 app.use('/api/chats', chatRoutes);
+app.use('/api/folders', folderRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
