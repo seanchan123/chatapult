@@ -137,18 +137,23 @@ const ExistingChat: React.FC = () => {
     const decoder = new TextDecoder("utf-8");
     let done = false;
     let accumulated = "";
+    let buffer = "";
   
     while (!done) {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       if (value) {
-        const rawString = decoder.decode(value, { stream: !doneReading });
-        const lines = rawString.split("\n");
+        // Append the new decoded text to the buffer
+        buffer += decoder.decode(value, { stream: !doneReading });
+        // Split buffer into lines
+        const lines = buffer.split("\n");
+        // Keep the last line (possibly incomplete) in the buffer
+        buffer = lines.pop() || "";
+        // Process all complete lines
         for (const line of lines) {
           const trimmedLine = line.trim();
           if (!trimmedLine) continue;
           if (trimmedLine.startsWith("data:")) {
-            // Remove the 'data:' prefix
             const jsonString = trimmedLine.slice("data:".length).trim();
             if (jsonString === "[DONE]") {
               done = true;
@@ -159,7 +164,7 @@ const ExistingChat: React.FC = () => {
               const content = parsed.choices?.[0]?.delta?.content || "";
               accumulated += content;
               // Update the UI by modifying the last message (placeholder) with accumulated text.
-              setMessages(prev => {
+              setMessages((prev) => {
                 const updated = [...prev];
                 if (updated.length > 0) {
                   updated[updated.length - 1] = {
@@ -171,7 +176,7 @@ const ExistingChat: React.FC = () => {
                 return updated;
               });
               // Yield control for UI update.
-              await new Promise(resolve => setTimeout(resolve, 0));
+              await new Promise((resolve) => setTimeout(resolve, 0));
             } catch (err) {
               console.error("Error parsing JSON:", err, "from line:", trimmedLine);
             }
