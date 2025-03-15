@@ -24,3 +24,30 @@ export const getChat = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const updateChat = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { messages } = req.body;
+
+    // Optionally convert message timestamps from strings to Date objects.
+    const convertedMessages = messages.map((m) => ({
+      ...m,
+      timestamp: new Date(m.timestamp),
+    }));
+
+    const updatedChat = await Chat.findOneAndUpdate(
+      { chatId },
+      { messages: convertedMessages },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedChat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+
+    res.status(200).json(updatedChat);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
