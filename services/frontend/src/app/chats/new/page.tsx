@@ -76,6 +76,7 @@ const NewChat: React.FC = () => {
     });
   };
 
+  // Streaming response reader
   const getAIResponseStream = async (
     query: string,
     onChunk: (partialText: string) => void
@@ -96,9 +97,7 @@ const NewChat: React.FC = () => {
     }
   
     const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error("ReadableStream not supported");
-    }
+    if (!reader) throw new Error("ReadableStream not supported");
     const decoder = new TextDecoder("utf-8");
     let done = false;
     let accumulated = "";
@@ -108,13 +107,12 @@ const NewChat: React.FC = () => {
       done = doneReading;
       if (value) {
         const rawString = decoder.decode(value, { stream: !doneReading });
-        // Split the raw chunk into lines in case multiple JSON objects come in one chunk.
         const lines = rawString.split("\n");
         for (const line of lines) {
           const trimmedLine = line.trim();
           if (!trimmedLine) continue;
           if (trimmedLine.startsWith("data:")) {
-            // Remove the 'data:' prefix.
+            // Remove the 'data:' prefix
             const jsonString = trimmedLine.slice("data:".length).trim();
             if (jsonString === "[DONE]") {
               done = true;
@@ -137,6 +135,7 @@ const NewChat: React.FC = () => {
     return accumulated;
   };
 
+  // Non-streaming response call
   const getAIResponse = async (query: string): Promise<string> => {
     const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
     if (!url) throw new Error("AI Dialogue Service URL not defined in env");
@@ -156,7 +155,8 @@ const NewChat: React.FC = () => {
     return data.response;
   };
 
-  const saveChat = async (conversation: Message[]) => {
+  // Save the conversation to the database (POST for new chat)
+  const saveChat = async (conversation: Message[]): Promise<string> => {
     const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
     if (!url) throw new Error("Database Service URL not defined in env");
 
@@ -183,8 +183,10 @@ const NewChat: React.FC = () => {
     });
     if (!res.ok) {
       console.error("Failed to save chat");
+      throw new Error("Failed to save chat");
     } else {
       console.log("Chat saved successfully");
+      return chatId;
     }
   };
 
@@ -192,7 +194,7 @@ const NewChat: React.FC = () => {
     if (!inputValue.trim()) return;
     const currentTime = new Date();
 
-    // Append user's message.
+    // Append user's message
     const userMessage: Message = {
       id: messages.length + 1,
       text: inputValue,
@@ -204,40 +206,37 @@ const NewChat: React.FC = () => {
     const userQuery = inputValue;
     setInputValue("");
 
-    // Add a placeholder system message to update with streaming text.
+    // Add placeholder for AI response
     const placeholderSystemMessage: Message = {
       id: updatedAfterUser.length + 1,
       text: "",
       sender: "system",
       timestamp: new Date(),
     };
-    let updatedConversation = [...updatedAfterUser, placeholderSystemMessage];
-    setMessages(updatedConversation);
 
     try {
+      let finalResponse = "";
       if (!streaming) {
-        // Non-streaming: get full response at once.
-        const fullText = await getAIResponse(userQuery);
-        updatedConversation = updatedConversation.map((msg) =>
-          msg.id === placeholderSystemMessage.id ? { ...msg, text: fullText } : msg
-        );
-        setMessages(updatedConversation);
+        finalResponse = await getAIResponse(userQuery);
       } else {
-        // Streaming: update the placeholder as chunks arrive.
-        await getAIResponseStream(userQuery, (partialText) => {
+        finalResponse = await getAIResponseStream(userQuery, (partialText) => {
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === placeholderSystemMessage.id
-                ? { ...msg, text: partialText }
+                ? { ...msg, text: partialText, timestamp: new Date() }
                 : msg
             )
           );
         });
       }
-      // Save the conversation after a brief delay to allow state to update.
-      setTimeout(() => {
-        saveChat([...messages]);
-      }, 500);
+      // Create a final conversation array using the final response.
+      const finalConversation = [
+        ...updatedAfterUser,
+        { ...placeholderSystemMessage, text: finalResponse, timestamp: new Date() },
+      ];
+      setMessages(finalConversation);
+      const newChatId = await saveChat(finalConversation);
+      router.push(`/chats/${newChatId}`);
     } catch (error) {
       console.error("Error in handleSendMessage:", error);
     }
@@ -331,3 +330,4 @@ const NewChat: React.FC = () => {
 };
 
 export default NewChat;
+
