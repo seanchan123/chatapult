@@ -93,38 +93,43 @@ const ChatsPage: React.FC = () => {
   // State for folder modal
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-
-  // Fetch folders for the logged-in user
-  const fetchFolders = async () => {
-    try {
-      const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
-      if (!url) throw new Error("Database Service URL not defined in env");
-      const response = await fetch(`${url}/api/folders?username=${user?.username}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${user?.token}`,
-        },
-      });
-      if (response.ok) {
-        const data: Folder[] = await response.json();
-        setFolders(data);
-      } else {
-        console.error("Failed to fetch folders");
-      }
-    } catch (error) {
-      console.error("Error fetching folders:", error);
-    }
-  };
   
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
     } else {
-      fetchFolders()
+      // Fetch folders for the logged-in user 
+      const fetchFolders = async (): Promise<void> => {
+        try {
+          const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+          if (!url) throw new Error("Database Service URL not defined in env");
+  
+          const response = await fetch(
+            `${url}/api/folders?username=${user?.username}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${user?.token}`,
+              },
+            }
+          );
+  
+          if (response.ok) {
+            const data: Folder[] = await response.json();
+            setFolders(data);
+          } else {
+            console.error("Failed to fetch folders");
+          }
+        } catch (error) {
+          console.error("Error fetching folders:", error);
+        }
+      };
+  
+      fetchFolders();
     }
-  }, [isAuthenticated, router, user?.username]);
+  }, [isAuthenticated, router, user?.username, user?.token]);
   
   if (!isAuthenticated) {
     return null;
