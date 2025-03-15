@@ -124,7 +124,7 @@ const NewChat: React.FC = () => {
               const parsed: ChatCompletionChunk = JSON.parse(jsonString);
               const content = parsed.choices?.[0]?.delta?.content || "";
               accumulated += content;
-              
+
               // Update the UI via the onChunk callback.
               onChunk(accumulated);
             } catch (err) {
@@ -318,7 +318,7 @@ const NewChat: React.FC = () => {
       </div>
 
       {/* Right Panel */}
-      <div className="hidden lg:block lg:w-1/6 sm:p-4 sm:pt-14 sm:pb-22 md:pb-28">
+      <div className="hidden lg:flex lg:w-1/6 sm:p-4 sm:pt-12 sm:pb-20 md:pb-26 justify-end items-start">
         <button
           onClick={toggleStreaming}
           className="mt-0 px-4 py-3 rounded-md text-sm font-medium text-gray-800 hover:bg-indigo-400 dark:text-gray-100 dark:bg-transparent dark:hover:bg-indigo-900"
