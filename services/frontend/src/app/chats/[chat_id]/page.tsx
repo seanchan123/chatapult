@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { AuthContext } from "@/contexts/AuthContext";
 
 interface Message {
-  id: number;
+  id: string;
   text: string;
   sender: "user" | "system";
   timestamp: Date;
@@ -105,6 +105,15 @@ const ExistingChat: React.FC = () => {
   if (!isAuthenticated) {
     return <div>Loading...</div>;
   }
+
+  // Utility function to generate a GUID
+  const generateGUID = (): string => {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  };
 
   // Streaming response reader
   const getAIResponseStream = async (query: string): Promise<string> => {
@@ -232,7 +241,7 @@ const ExistingChat: React.FC = () => {
 
     // Append user's message
     const userMessage: Message = {
-      id: messages.length + 1,
+      id: generateGUID(),
       text: inputValue,
       sender: "user",
       timestamp: currentTime,
@@ -244,7 +253,7 @@ const ExistingChat: React.FC = () => {
     
     // Add placeholder for AI response
     const placeholderSystemMessage: Message = {
-      id: updatedAfterUser.length + 1,
+      id: generateGUID(),
       text: "Loading...",
       sender: "system",
       timestamp: new Date(),
