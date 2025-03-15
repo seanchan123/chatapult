@@ -370,7 +370,7 @@ const ExistingChat: React.FC = () => {
       <div className="hidden lg:flex lg:w-1/6 sm:p-4 sm:pt-12 sm:pb-20 md:pb-26 justify-end items-start">
         <button
           onClick={handleEditClick}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none flex items-center space-x-2"
+          className="mt-0.5 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none flex items-center space-x-2"
         >
           <span className="mr-1">Edit</span>
           <svg
