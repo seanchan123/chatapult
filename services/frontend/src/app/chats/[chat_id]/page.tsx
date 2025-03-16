@@ -37,21 +37,72 @@ interface ChatResponse {
   tags: string[];
 }
 
+interface Folder {
+  folderId: string;
+  folderName: string;
+  username: string;
+}
+
 const ExistingChat: React.FC = () => {
   const { isAuthenticated, user } = React.useContext(AuthContext);
   const router = useRouter();
   const { chat_id } = useParams() as { chat_id: string };
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [editText, setEditText] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const [streaming, setStreaming] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Chat information
+  // Chat info state
   const [chatName, setChatName] = useState<string>("");
   const [folderId, setFolderId] = useState<string>("");
   const [tags, setTags] = useState<string[]>([]);
+
+  // Editable fields in the modal
+  const [editChatName, setEditChatName] = useState<string>("");
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState<string>("");
+
+  // For folder dropdown in the modal:
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<string>("none");
+  const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
+  const [newFolderNameFromModal, setNewFolderNameFromModal] = useState<string>("");
+
+  // When fetched chat details change, update the modal fields.
+  useEffect(() => {
+    // Fetch folders for the logged-in user.
+    const fetchFolders = async () => {
+      try {
+        const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+        if (!url) throw new Error("Database Service URL not defined in env");
+        const response = await fetch(
+          `${url}/api/folders?username=${user?.username}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${user?.token}`,
+            },
+          }
+        );
+        if (response.ok) {
+          const data: Folder[] = await response.json();
+          setFolders(data);
+        } else {
+          console.error("Failed to fetch folders");
+        }
+      } catch (error) {
+        console.error("Error fetching folders:", error);
+      }
+    };
+
+    setEditChatName(chatName);
+    setEditTags(tags);
+
+    fetchFolders();
+    setSelectedFolder(folderId || "none");
+  }, [chatName, tags, folderId, user?.username, user?.token]);
 
   // Utility function to scroll to the bottom of the chat
   const scrollToBottom = (): void => {
@@ -89,14 +140,10 @@ const ExistingChat: React.FC = () => {
             sender: m.sender,
             timestamp: new Date(m.timestamp),
           }));
-          const folderId = data.folderId;
-          const chatName = data.chatName;
-          const tags = data.tags;
-
           setMessages(loadedMessages);
-          setFolderId(folderId);
-          setChatName(chatName);
-          setTags(tags);
+          setChatName(data.chatName);
+          setFolderId(data.folderId);
+          setTags(data.tags);
         } else {
           console.error("Failed to fetch chat");
         }
@@ -109,7 +156,6 @@ const ExistingChat: React.FC = () => {
     if (isAuthenticated) {
       fetchChat();
     }
-    // The dependency array includes isAuthenticated, chat_id, and user?.token
   }, [isAuthenticated, chat_id, user?.token]);
   
   // Scroll to the bottom whenever messages change
@@ -130,11 +176,8 @@ const ExistingChat: React.FC = () => {
     });
   };
 
-  // Streaming response call
-  const getAIResponseStream = async (
-    query: string,
-    history: Message[]
-  ): Promise<string> => {
+  // Streaming response reader
+  const getAIResponseStream = async (query: string, history: Message[]): Promise<string> => {
     const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
     if (!url) throw new Error("AI Dialogue Service URL not defined in env");
 
@@ -160,7 +203,7 @@ const ExistingChat: React.FC = () => {
     let done = false;
     let accumulated = "";
     let buffer = "";
-
+  
     while (!done) {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
@@ -210,10 +253,7 @@ const ExistingChat: React.FC = () => {
   };
 
   // Non-streaming response call
-  const getAIResponse = async (
-    query: string,
-    history: Message[]
-  ): Promise<string> => {
+  const getAIResponse = async (query: string, history: Message[]): Promise<string> => {
     const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
     if (!url) throw new Error("AI Dialogue Service URL not defined in env");
 
@@ -267,6 +307,36 @@ const ExistingChat: React.FC = () => {
       console.error("Error updating chat:", error);
     }
   };
+
+  // PUT updated chat details (chatName and tags) to the database.
+  const updateChatDetails = async (details: { chatName?: string; tags?: string[]; folderId?: string }): Promise<void> => {
+    try {
+      const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+      if (!url) throw new Error("Database Service URL not defined in env");
+  
+      const response = await fetch(`${url}/api/chats/${chat_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user?.token}`,
+        },
+        body: JSON.stringify(details),
+      });
+  
+      if (!response.ok) {
+        console.error("Failed to update chat details");
+      } else {
+        console.log("Chat details updated successfully");
+        const data = await response.json();
+        setChatName(data.chatName);
+        setTags(data.tags);
+        setFolderId(data.folderId);
+      }
+    } catch (error) {
+      console.error("Error updating chat details:", error);
+    }
+  };
+  
 
   // Handler for sending a new message.
   const handleSendMessage = async () => {
@@ -330,7 +400,7 @@ const ExistingChat: React.FC = () => {
     setStreaming((prev) => !prev);
   };
   
-  // Handle modal open/close
+  // Modal: Edit Chat Details (chatName and tags)
   const handleEditClick = () => {
     setIsModalOpen(true);
   };
@@ -339,9 +409,51 @@ const ExistingChat: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  // Handle form submit in the modal
-  const handleModalSubmit = (e: React.FormEvent) => {
+  // Handler for processing tag input: if user types space or comma, add tag.
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === " " || e.key === ",") {
+      e.preventDefault();
+      const trimmed = tagInput.trim();
+      if (trimmed && !editTags.includes(trimmed)) {
+        setEditTags((prev) => [...prev, trimmed]);
+      }
+      setTagInput("");
+    }
+  };
+
+  const handleModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    let finalFolderId = selectedFolder;
+    if (selectedFolder === "create") {
+      // Create new folder
+      const newFolderId = generateGUID();
+      const folderData = {
+        folderId: newFolderId,
+        folderName: newFolderNameFromModal,
+        username: user?.username || "unknown",
+      };
+      try {
+        const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+        if (!url) throw new Error("Database Service URL not defined in env");
+        const response = await fetch(`${url}/api/folders`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${user?.token}`,
+          },
+          body: JSON.stringify(folderData),
+        });
+        if (response.ok) {
+          finalFolderId = newFolderId;
+          setFolders((prev) => [...prev, folderData]);
+        } else {
+          console.error("Failed to create folder");
+        }
+      } catch (error) {
+        console.error("Error creating folder:", error);
+      }
+    }
+    await updateChatDetails({ chatName: editChatName, tags: editTags, folderId: finalFolderId });
     setIsModalOpen(false);
   };
 
@@ -373,7 +485,9 @@ const ExistingChat: React.FC = () => {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex w-full ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex w-full ${
+                message.sender === "user" ? "justify-end" : "justify-start"
+              }`}
             >
               <div className="flex flex-col items-start">
                 <div className="text-xs text-gray-500 mt-4 mb-0.5">
@@ -447,32 +561,87 @@ const ExistingChat: React.FC = () => {
 
       {/* Modal for Editing Chat Details */}
       {isModalOpen && (
-        <div onClick={handleModalClose} className="fixed inset-0 z-50 bg-black bg-opacity-75 flex justify-center items-center !m-0">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-4/5 lg:w-full max-w-md mx-auto">
+        <div
+          onClick={handleModalClose}
+          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex justify-center items-center !m-0"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-4/5 lg:w-full max-w-md mx-auto"
+          >
             <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-t bg-clip-text text-transparent from-indigo-400 to-indigo-600 dark:from-indigo-400 dark:to-indigo-500">
-              Edit Chat
+              Edit Chat Details
             </h2>
             <form onSubmit={handleModalSubmit}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
-                  Chat ID
+                  Chat Name
                 </label>
                 <input
                   type="text"
-                  value={chat_id}
-                  disabled
+                  value={editChatName}
+                  onChange={(e) => setEditChatName(e.target.value)}
+                  placeholder="Enter chat name..."
+                  required
                   className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
                 />
               </div>
+              
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
-                  Edit Message
+                  Folder
                 </label>
-                <textarea
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
+                <select
+                  value={selectedFolder}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedFolder(value);
+                    setIsCreatingFolder(value === "create");
+                  }}
                   className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
-                  placeholder="Edit your chat message here..."
+                >
+                  <option className="italic" value="none">None</option>
+                  {folders.map((folder) => (
+                    <option key={folder.folderId} value={folder.folderId}>
+                      {folder.folderName}
+                    </option>
+                  ))}
+                  <option className="font-bold" value="create">Create New Folder</option>
+                </select>
+              </div>
+              {isCreatingFolder && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                    New Folder Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newFolderNameFromModal}
+                    onChange={(e) => setNewFolderNameFromModal(e.target.value)}
+                    placeholder="Enter new folder name..."
+                    required
+                    className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
+                  />
+                </div>
+              )}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                  Tags
+                </label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {editTags && editTags.map((tag, index) => (
+                    <span key={`${tag}-${index}`} className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-md">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  placeholder="Type tag and press space, comma, or Enter"
+                  className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
                 />
               </div>
               <button
