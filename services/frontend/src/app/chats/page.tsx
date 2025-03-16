@@ -8,9 +8,9 @@ import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/contexts/AuthContext";
 
 interface Chat {
-  id: string;
-  name: string;
-  date: string;
+  chatId: string;
+  chatName: string;
+  createdAt: string;
   tags: string[];
 }
 
@@ -26,85 +26,48 @@ const ChatsPage: React.FC = () => {
 
   const [search, setSearch] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: "1",
-      name: "Jon Jones",
-      date: "19/07/1987",
-      tags: ["Bones", "Drugs", "GOAT"],
-    },
-    {
-      id: "2",
-      name: "Alex Pereira",
-      date: "07/07/1987",
-      tags: ["Poatan", "Left-hook", "Beer"],
-    },
-    {
-      id: "3",
-      name: "Charles Oliveira",
-      date: "17/10/1989",
-      tags: ["Cowboy", "Skull", "BJJ"],
-    },
-    {
-      id: "4",
-      name: "Kamaru Usman",
-      date: "11/05/1987",
-      tags: ["Nigerian Nightmare", "Wrestling", "Champ"],
-    },
-    {
-      id: "5",
-      name: "Israel Adesanya",
-      date: "22/07/1989",
-      tags: ["Stylebender", "Kickboxing", "UFC"],
-    },
-    {
-      id: "6",
-      name: "Conor McGregor",
-      date: "14/07/1988",
-      tags: ["Notorious", "Striking", "Whiskey"],
-    },
-    {
-      id: "7",
-      name: "Anderson Silva",
-      date: "14/04/1975",
-      tags: ["Spider", "Muay Thai", "Legend"],
-    },
-    {
-      id: "8",
-      name: "Georges St-Pierre",
-      date: "19/05/1981",
-      tags: ["GSP", "Wrestling", "GOAT"],
-    },
-    {
-      id: "9",
-      name: "Daniel Cormier",
-      date: "20/03/1979",
-      tags: ["DC", "Wrestling", "Analyst"],
-    },
-    {
-      id: "10",
-      name: "Khabib Nurmagomedov",
-      date: "20/09/1988",
-      tags: ["Eagle", "Sambo", "GOAT"],
-    },
-  ]);
+  const [chats, setChats] = useState<Chat[]>([]);
   const [draggingChat, setDraggingChat] = useState<string | null>(null);
 
   // State for folder modal
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  
-  // Redirect to login if not authenticated
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
     } else {
-      // Fetch folders for the logged-in user 
-      const fetchFolders = async (): Promise<void> => {
+      // Fetch chats from the database filtering by username.
+      const fetchChats = async () => {
         try {
           const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
           if (!url) throw new Error("Database Service URL not defined in env");
-  
+          const response = await fetch(
+            `${url}/api/chats?username=${user?.username}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${user?.token}`,
+              },
+            }
+          );
+          if (response.ok) {
+            const data: Chat[] = await response.json();
+            setChats(data);
+          } else {
+            console.error("Failed to fetch chats");
+          }
+        } catch (error) {
+          console.error("Error fetching chats:", error);
+        }
+      };
+
+      // Fetch folders for the logged-in user.
+      const fetchFolders = async () => {
+        try {
+          const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+          if (!url) throw new Error("Database Service URL not defined in env");
           const response = await fetch(
             `${url}/api/folders?username=${user?.username}`,
             {
@@ -115,7 +78,6 @@ const ChatsPage: React.FC = () => {
               },
             }
           );
-  
           if (response.ok) {
             const data: Folder[] = await response.json();
             setFolders(data);
@@ -126,7 +88,8 @@ const ChatsPage: React.FC = () => {
           console.error("Error fetching folders:", error);
         }
       };
-  
+
+      fetchChats();
       fetchFolders();
     }
   }, [isAuthenticated, router, user?.username, user?.token]);
@@ -159,7 +122,7 @@ const ChatsPage: React.FC = () => {
         )
       );
       setChats((prevChats) =>
-        prevChats.filter((chat) => chat.id !== draggingChat)
+        prevChats.filter((chat) => chat.chatId !== draggingChat)
       );
       setDraggingChat(null);
     }
@@ -209,10 +172,7 @@ const ChatsPage: React.FC = () => {
         <div>
           <div className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">
             Search for your{" "}
-            <span className="text-indigo-700 dark:text-indigo-500">
-              item(s)
-            </span>
-            .
+            <span className="text-indigo-700 dark:text-indigo-500">item(s)</span>.
           </div>
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 mb-4">
             <input
@@ -285,22 +245,22 @@ const ChatsPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {chats.map((chat) => (
               <Link
-                key={chat.id}
-                href={`/chats/${chat.id}`}
+                key={chat.chatId}
+                href={`/chats/${chat.chatId}`}
                 className="p-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 font-medium rounded-md shadow-md cursor-pointer"
                 draggable
-                onDragStart={() => handleDragStart(chat.id)}
+                onDragStart={() => handleDragStart(chat.chatId)}
               >
                 <div className="truncate w-full text-lg font-bold">
-                  {chat.name}
+                  {chat.chatName}
                 </div>
-                <div className="font-light text-sm">Last Used: {chat.date}</div>
+                <div className="font-light text-sm">Created At: {new Date(chat.createdAt).toLocaleString()}</div>
                 <div className="overflow-hidden">
                   <span className="text-sm font-medium text-gray-400">
                     Tags:{" "}
                   </span>
                   <div className="flex space-x-1 h-8 whitespace-nowrap no-scrollbar overflow-y-hidden">
-                    {chat.tags.length > 0 ? (
+                    {chat.tags && chat.tags.length > 0 ? (
                       chat.tags.map((tag) => (
                         <span
                           key={tag}
