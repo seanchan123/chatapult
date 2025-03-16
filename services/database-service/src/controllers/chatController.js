@@ -46,6 +46,30 @@ export const getChats = async (req, res) => {
   }
 };
 
+export const updateChat = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { chatName, folderId, tags } = req.body;
+    
+    const updates = {};
+    if (chatName !== undefined) updates.chatName = chatName;
+    if (folderId !== undefined) updates.folderId = folderId;
+    if (tags !== undefined) updates.tags = tags;
+
+    const updatedChat = await Chat.findOneAndUpdate(
+      { chatId },
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+    if (!updatedChat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+    res.status(200).json(updatedChat);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const updateChatMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
