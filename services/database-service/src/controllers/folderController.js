@@ -1,4 +1,5 @@
 // src/controllers/folderController.js
+import Chat from '../models/Chat.js';
 import Folder from '../models/Folder.js';
 
 export const createFolder = async (req, res) => {
@@ -64,7 +65,8 @@ export const deleteFolder = async (req, res) => {
     if (!deletedFolder) {
       return res.status(404).json({ error: "Folder not found" });
     }
-    return res.status(200).json({ message: "Folder deleted successfully" })
+    await Chat.deleteMany({ folderId });
+    return res.status(200).json({ message: "Folder and associated chats deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
