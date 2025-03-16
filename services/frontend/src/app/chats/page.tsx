@@ -140,10 +140,10 @@ const ChatsPage: React.FC = () => {
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
   };
-
+  
   // Create a new folder
   const createFolder = async () => {
     try {
@@ -218,7 +218,8 @@ const ChatsPage: React.FC = () => {
           </div>
           <div className="flex flex-wrap gap-4">
             {folders.map((folder) => (
-              <div
+              <Link
+                href={`/chats/folders/${folder.folderId}`}
                 key={folder.folderId}
                 className="p-4 w-full md:w-60 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 rounded-md shadow-lg flex flex-col cursor-pointer justify-between"
                 onDrop={() => handleDrop(folder.folderId)}
@@ -243,7 +244,7 @@ const ChatsPage: React.FC = () => {
                     {folder.folderName}
                   </h2>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -343,11 +344,6 @@ const ChatsPage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Right Panel (Optional extra controls) */}
-      <div className="hidden lg:flex lg:w-1/6 sm:p-4 sm:pt-12 sm:pb-20 md:pb-26 justify-end items-start">
-        {/* You can add extra controls here if needed */}
-      </div>
     </div>
   );
 };
