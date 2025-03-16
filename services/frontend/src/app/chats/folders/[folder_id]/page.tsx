@@ -174,7 +174,7 @@ const FolderPage: React.FC = () => {
               Edit Folder
             </button>
             <Link
-              href="/chats/new"
+              href={`/chats/new?folderId=${folder_id}`}
               className="w-full md:w-1/6 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md text-center focus:outline-none"
             >
               New Chat

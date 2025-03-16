@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState, useContext } from "react";
 
 import { AuthContext } from "@/contexts/AuthContext";
@@ -45,6 +45,10 @@ const NewChat: React.FC = () => {
   const [inputValue, setInputValue] = useState<string>("");
   const [streaming, setStreaming] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // If chat was created in a folder
+  const searchParams = useSearchParams();
+  const folderId = searchParams.get("folderId");
 
   // Scroll to bottom utility
   const scrollToBottom = () => {
@@ -177,7 +181,7 @@ const NewChat: React.FC = () => {
     const currentTimestamp = new Date().toISOString();
     const chatData = {
       username: user?.username || "unknown",
-      folderId: "",
+      folderId: folderId || "",
       chatName: `Chat (${currentTimestamp})`,
       chatId,
       messages: conversation.map((m) => ({
