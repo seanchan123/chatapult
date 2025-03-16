@@ -21,6 +21,7 @@ const FolderPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [chats, setChats] = useState<Chat[]>([]);
   const [folderName, setFolderName] = useState("");
+  const [folderCreatedAt, setFolderCreatedAt] = useState("");
 
   // State for folder modal
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
@@ -74,6 +75,7 @@ const FolderPage: React.FC = () => {
           if (response.ok) {
             const data = await response.json();
             setFolderName(data.folderName);
+            setFolderCreatedAt(data.createdAt);
           } else {
             console.error("Failed to fetch folder name");
           }
@@ -130,6 +132,26 @@ const FolderPage: React.FC = () => {
   return (
     <div className="min-h-screen py-8 px-4 md:px-20">
       <div className="flex flex-col space-y-8 mt-10 md:mt-28">
+        {/* Back Button */}
+        <div>
+          <Link
+            href="/chats"
+            className="px-4 py-3 rounded-md text-sm font-medium text-gray-800 hover:bg-indigo-400 dark:text-gray-100 dark:bg-transparent dark:hover:bg-indigo-900"
+          >
+            <span className="mr-1">{"⬅"}</span> Go to Chats
+          </Link>
+        </div>
+
+        {/* Folder Info */}
+        <div className="flex flex-col space-y-4 text-center">
+          <div className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+            {newFolderName}
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-300">
+            Created At: {new Date(folderCreatedAt).toLocaleString()}
+          </div>
+        </div>
+
         {/* Actions Section */}
         <div>
           <div className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">
