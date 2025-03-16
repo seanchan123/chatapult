@@ -77,8 +77,9 @@ async def chat_handler(payload: dict):
         search_results = qdrant_client.query_points(
             collection_name=COLLECTION_NAME,
             query=query_vector,
-            limit=3,  # Adjust as needed.
-            with_payload=True
+            limit=3,
+            with_payload=True,
+            score_threshold=0.5
         ).points
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error querying Qdrant: {e}")
@@ -95,31 +96,35 @@ async def chat_handler(payload: dict):
         if src:
             sources.add(src)
     context = "\n".join(context_chunks)
-    sources_str = ", ".join(sorted(sources)) if sources else "Unknown"
+    sources_str = ", ".join(sorted(sources))
 
     # Step 4: Assemble the augmented prompt.
     # If history_text exists, prepend it to the prompt.
     prompt = (
         (f"Conversation History:\n{history_text}\n\n" if history_text else "") +
-        f"Answer the following question using only the provided context if relevant. "
-        f"Question: \"{query_text}\"\n\n"
-        f"Context:\n{context}\n\n"
-        "Respond thoroughly and accurately, but do not include any greetings or extra commentary."
+        f"Answer the following query using only the provided sources as it is modern and factual."
+        f"Question:\n{query_text}\n\n"
+        f"Sources:\n{context}\n\n"
+        f"Respond thoroughly and accurately, but do not include any greetings or extra commentary."
+        f"Format your responses in markdown language for clarity, without wrapping the response in markdown."
     )
 
     # Step 5: Forward the prompt to the inference service.
     raw_response = await call_inference_service(prompt, stream=stream_requested)
 
     # Step 6: For non-streaming responses, wrap the output in Markdown with a footer for sources.
+    # If sources_str is exists, append it to the response.
     if stream_requested:
-        return raw_response  # The streaming response is already a StreamingResponse.
+        async def markdown_stream_generator():
+            async for chunk in raw_response.body_iterator:
+                yield chunk
+            if sources_str:  # Only append footer if sources_str exists
+                yield f"\n\n---\n**Sources:** {sources_str}".encode("utf-8")
+        return StreamingResponse(markdown_stream_generator(), media_type="text/plain")
     else:
-        final_markdown = (
-            f"## Answer\n\n"
-            f"{raw_response}\n\n"
-            f"---\n"
-            f"**Sources:** {sources_str}"
-        )
+        final_markdown = raw_response
+        if sources_str:  # Only append footer if sources_str exists
+            final_markdown += f"\n\n---\n**Sources:** {sources_str}"
         return JSONResponse({"response": final_markdown})
 
 def embed_text(text: str):
