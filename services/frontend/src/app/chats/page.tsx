@@ -37,32 +37,6 @@ const ChatsPage: React.FC = () => {
     if (!isAuthenticated) {
       router.push("/login");
     } else {
-      // Fetch chats from the database filtering by username.
-      const fetchChats = async () => {
-        try {
-          const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
-          if (!url) throw new Error("Database Service URL not defined in env");
-          const response = await fetch(
-            `${url}/api/chats?username=${user?.username}&folderId=none`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${user?.token}`,
-              },
-            }
-          );
-          if (response.ok) {
-            const data: Chat[] = await response.json();
-            setChats(data);
-          } else {
-            console.error("Failed to fetch chats");
-          }
-        } catch (error) {
-          console.error("Error fetching chats:", error);
-        }
-      };
-
       // Fetch folders for the logged-in user.
       const fetchFolders = async () => {
         try {
@@ -89,6 +63,33 @@ const ChatsPage: React.FC = () => {
         }
       };
 
+      // Fetch chats from the database filtering by username.
+      const fetchChats = async () => {
+        try {
+          const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+          if (!url) throw new Error("Database Service URL not defined in env");
+          // Note: GET requests should not have a body. So we pass the username as a query param.
+          const response = await fetch(
+            `${url}/api/chats?username=${user?.username}&folderId=none`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${user?.token}`,
+              },
+            }
+          );
+          if (response.ok) {
+            const data: Chat[] = await response.json();
+            setChats(data);
+          } else {
+            console.error("Failed to fetch chats");
+          }
+        } catch (error) {
+          console.error("Error fetching chats:", error);
+        }
+      };
+
       fetchChats();
       fetchFolders();
     }
@@ -97,6 +98,19 @@ const ChatsPage: React.FC = () => {
   if (!isAuthenticated) {
     return null;
   }
+
+  // Filter chats and folders using the search term (case-insensitive)
+  const lowerCaseSearch = search.trim().toLowerCase();
+  const filteredChats = lowerCaseSearch
+    ? chats.filter((chat) =>
+        chat.chatName.toLowerCase().includes(lowerCaseSearch)
+      )
+    : chats;
+  const filteredFolders = lowerCaseSearch
+    ? folders.filter((folder) =>
+        folder.folderName.toLowerCase().includes(lowerCaseSearch)
+      )
+    : folders;
 
   // Utility function to generate a GUID (for folderId)
   const generateGUID = (): string => {
@@ -217,7 +231,7 @@ const ChatsPage: React.FC = () => {
             <span className="text-indigo-700 dark:text-indigo-500">folders</span>.
           </div>
           <div className="flex flex-wrap gap-4">
-            {folders.map((folder) => (
+            {filteredFolders.map((folder) => (
               <Link
                 href={`/chats/folders/${folder.folderId}`}
                 key={folder.folderId}
@@ -256,7 +270,7 @@ const ChatsPage: React.FC = () => {
             <span className="text-indigo-700 dark:text-indigo-500">chats</span>.
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {chats.map((chat) => (
+            {filteredChats.map((chat) => (
               <Link
                 key={chat.chatId}
                 href={`/chats/${chat.chatId}`}

@@ -14,7 +14,7 @@ interface Chat {
   tags: string[];
 }
 
-const ChatsPage: React.FC = () => {
+const FolderPage: React.FC = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
   const router = useRouter();
   const { folder_id } = useParams() as { folder_id: string };
@@ -92,6 +92,14 @@ const ChatsPage: React.FC = () => {
     return null;
   }
 
+  // Compute filtered chats using the search term.
+  const lowerCaseSearch = search.trim().toLowerCase();
+  const filteredChats = lowerCaseSearch
+    ? chats.filter((chat) =>
+        chat.chatName.toLowerCase().includes(lowerCaseSearch)
+      )
+    : chats;
+
   // Edit current folder
   const editFolder = async () => {
     try {
@@ -136,8 +144,7 @@ const ChatsPage: React.FC = () => {
               placeholder="Search by name, tags, etc."
               required
               className="w-full md:w-4/6 py-2 px-4 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
-            />
-            
+            />            
             <button
               onClick={() => setIsFolderModalOpen(true)}
               className="w-full md:w-1/6 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md focus:outline-none"
@@ -160,7 +167,7 @@ const ChatsPage: React.FC = () => {
             <span className="text-indigo-700 dark:text-indigo-500">chats</span>.
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {chats.map((chat) => (
+            {filteredChats.map((chat) => (
               <Link
                 key={chat.chatId}
                 href={`/chats/${chat.chatId}`}
@@ -250,4 +257,4 @@ const ChatsPage: React.FC = () => {
   );
 };
 
-export default ChatsPage;
+export default FolderPage;
