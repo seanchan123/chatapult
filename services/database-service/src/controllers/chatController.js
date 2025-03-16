@@ -3,8 +3,8 @@ import Chat from '../models/Chat.js';
 
 export const createChat = async (req, res) => {
   try {
-    const { username, folderId, chatId, chatName, messages } = req.body;
-    const chat = new Chat({ username, folderId, chatId, chatName, messages });
+    const { username, folderId, chatId, chatName, messages, tags } = req.body;
+    const chat = new Chat({ username, folderId, chatId, chatName, messages, tags });
     await chat.save();
     res.status(201).json(chat);
   } catch (error) {
@@ -54,7 +54,7 @@ export const updateChat = async (req, res) => {
     const updates = {};
     if (chatName !== undefined) updates.chatName = chatName;
     if (folderId !== undefined) updates.folderId = folderId;
-    if (tags !== undefined) updates.tags = tags;
+    if (tags !== undefined && Array.isArray(tags)) updates.tags = tags;
 
     const updatedChat = await Chat.findOneAndUpdate(
       { chatId },

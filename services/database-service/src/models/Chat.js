@@ -12,6 +12,7 @@ const chatSchema = new mongoose.Schema({
   folderId: { type: String, required: false },
   chatId: { type: String, required: true },
   chatName: { type: String, required: true },
+  tags: { type: [String], default: [] },
   messages: [messageSchema],
   createdAt: { type: Date, default: Date.now }
 });
