@@ -111,19 +111,31 @@ const ChatsPage: React.FC = () => {
     setDraggingChat(chatId);
   };
 
-  const handleDrop = (folderId: string) => {
+  const handleDrop = async (folderId: string) => {
     if (draggingChat) {
-      setFolders((prevFolders) =>
-        prevFolders.map((folder) =>
-          folder.folderId === folderId
-            // ? { ...folder, chats: [...folder.chats, draggingChat] }
-            ? { ...folder }
-            : folder
-        )
-      );
-      setChats((prevChats) =>
-        prevChats.filter((chat) => chat.chatId !== draggingChat)
-      );
+      try {
+        const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+        if (!url) throw new Error("Database Service URL not defined in env");
+        
+        // Call the API to update the chat's folderId.
+        const response = await fetch(`${url}/api/chats/${draggingChat}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${user?.token}`,
+          },
+          body: JSON.stringify({ folderId }),
+        });
+        
+        if (!response.ok) {
+          console.error("Failed to update chat folder");
+        } else {
+          console.log("Chat folder updated successfully");
+          setChats((prevChats) => prevChats.filter((chat) => chat.chatId !== draggingChat));
+        }
+      } catch (error) {
+        console.error("Error updating chat folder:", error);
+      }
       setDraggingChat(null);
     }
   };
