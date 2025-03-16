@@ -1,9 +1,14 @@
-// src/app/dashboard/page.tsx
+// src/app/page.tsx
 "use client";
 
-import Link from "next/link";
+import Link from "next/link"
+import React, { useContext } from "react";
+
+import { AuthContext } from "@/contexts/AuthContext";
 
 const Home: React.FC = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+
   return (
     <div className="pt-24 h-screen bg-white dark:bg-gray-800 color-transition">
       {/* Hero Section */}
@@ -23,7 +28,7 @@ const Home: React.FC = () => {
           </div>
 
           <div className="mt-8 sm:mt-12 md:mt-16">
-            <Link href="/register">
+            <Link href={`${isAuthenticated ? `/chats/new` : `/register`}`}>
               <span className="px-6 py-3 sm:px-8 sm:py-4 rounded-md text-md sm:text-lg text-white bg-indigo-600 hover:bg-indigo-700">
                 Get Started
               </span>

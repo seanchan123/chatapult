@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     Cookies.set('username', username, { expires: 1 });
     setIsAuthenticated(true);
     setUser({ token, username });
-    router.push('/dashboard');
+    router.push('/chats');
   };
 
   const logout = () => {
