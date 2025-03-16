@@ -94,6 +94,29 @@ const ChatsPage: React.FC = () => {
 
   // Edit current folder
   const editFolder = async () => {
+    try {
+      const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+      if (!url) throw new Error("Database Service URL not defined in env");
+      const folderData = {
+        folderName: newFolderName,
+      };
+      const response = await fetch(`${url}/api/folders/${folder_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user?.token}`,
+        },
+        body: JSON.stringify(folderData),
+      });
+      if (!response.ok) {
+        console.error("Failed to update folder");
+      } else {
+        console.log("Folder updated successfully");
+        setIsFolderModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Error updating folder:", error);
+    }
   };
 
   return (
