@@ -428,6 +428,32 @@ const ExistingChat: React.FC = () => {
     setEditTags((prev) => prev.filter((tag) => tag !== tagToDelete));
   };
 
+  const handleDeleteChat = async () => {
+    try {
+      const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+      if (!url) throw new Error("Database Service URL not defined in env");
+      const response = await fetch(`${url}/api/chats/${chat_id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user?.token}`,
+        },
+      });
+      if (!response.ok) {
+        console.error("Failed to delete chat");
+      } else {
+        console.log("Chat deleted successfully");
+        if (folderId) {
+          router.push(`/chats/folders/${folderId}`);
+        } else {
+          router.push("/chats");
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+    }
+  };
+
   const handleModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let finalFolderId = selectedFolder;
@@ -660,6 +686,13 @@ const ExistingChat: React.FC = () => {
                 className="w-full bg-indigo-600 text-white font-medium py-2 rounded-md hover:bg-indigo-700 focus:outline-none"
               >
                 Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteChat}
+                className="w-full bg-red-700 text-white font-medium py-2 rounded-md hover:bg-red-800 focus:outline-none mt-4"
+              >
+                Delete Chat
               </button>
               <button
                 type="button"
