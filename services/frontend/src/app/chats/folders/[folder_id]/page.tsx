@@ -129,6 +129,29 @@ const FolderPage: React.FC = () => {
     }
   };
 
+  // Delete current folder
+  const handleDeleteFolder = async () => {
+    try {
+      const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
+      if (!url) throw new Error("Database Service URL not defined in env");
+      const response = await fetch(`${url}/api/folders/${folder_id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user?.token}`,
+        },
+      });
+      if (!response.ok) {
+        console.error("Failed to delete folder");
+      } else {
+        console.log("Folder deleted successfully");
+        router.push("/chats");
+      }
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen py-8 px-4 md:px-20">
       <div className="flex flex-col space-y-8 mt-10 md:mt-28">
@@ -263,6 +286,13 @@ const FolderPage: React.FC = () => {
                 className="w-full bg-indigo-600 text-white font-medium py-2 rounded-md hover:bg-indigo-700 focus:outline-none"
               >
                 Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteFolder}
+                className="w-full bg-red-700 text-white font-medium py-2 rounded-md hover:bg-red-800 focus:outline-none mt-4"
+              >
+                Delete Folder
               </button>
               <button
                 type="button"
