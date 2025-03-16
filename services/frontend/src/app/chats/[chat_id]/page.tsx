@@ -537,7 +537,29 @@ const ExistingChat: React.FC = () => {
                   {message.sender === "system" && message.text === "Loading..." ? (
                     <em>{message.text}</em>
                   ) : (
-                    <ReactMarkdown>{message.text}</ReactMarkdown>
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ ...props}) => <h1 className="text-3xl font-bold my-6" {...props} />,
+                        h2: ({...props}) => <h2 className="text-2xl font-bold my-5" {...props} />,
+                        h3: ({...props}) => <h3 className="text-xl font-semibold my-4" {...props} />,
+                        h4: ({...props}) => <h4 className="text-lg font-semibold my-3" {...props} />,
+                        h5: ({...props}) => <h5 className="text-base font-medium my-2" {...props} />,
+                        h6: ({...props}) => <h6 className="text-sm font-medium my-2" {...props} />,
+                        p: ({...props}) => <p className="leading-relaxed" {...props} />,
+                        a: ({...props}) => <a className="text-indigo-600 hover:underline" {...props} />,
+                        li: ({...props}) => <li className="ml-6 list-disc" {...props} />,
+                        blockquote: ({...props}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props} />,
+                        code: ({children, ...props}) => <code className="bg-gray-100 text-red-500 p-1 rounded" {...props}>{children}</code>,
+                        hr: ({...props}) => <hr className="my-2 border-t border-gray-300" {...props} />,
+                        table: ({...props}) => <table className="min-w-full divide-y divide-gray-200 my-4" {...props} />,
+                        thead: ({...props}) => <thead className="bg-gray-50" {...props} />,
+                        tbody: ({...props}) => <tbody className="bg-white divide-y divide-gray-200" {...props} />,
+                        th: ({...props}) => <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" {...props} />,
+                        td: ({...props}) => <td className="px-6 py-4 whitespace-nowrap" {...props} />,
+                      }}
+                    >
+                      {message.text}
+                    </ReactMarkdown>
                   )}
                 </div>
               </div>
