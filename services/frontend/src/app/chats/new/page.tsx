@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState, useContext } from "react";
 
@@ -304,7 +305,7 @@ const NewChat: React.FC = () => {
                   {message.sender === "system" && message.text === "Loading..." ? (
                     <em>{message.text}</em>
                   ) : (
-                    message.text
+                    <ReactMarkdown>{message.text}</ReactMarkdown>
                   )}
                 </div>
               </div>
