@@ -31,7 +31,10 @@ interface ChatCompletionChunk {
 }
 
 interface ChatResponse {
+  chatName: string;
+  folderId: string;
   messages: Message[];
+  tags: string[];
 }
 
 const ExistingChat: React.FC = () => {
@@ -44,6 +47,11 @@ const ExistingChat: React.FC = () => {
   const [inputValue, setInputValue] = useState<string>("");
   const [streaming, setStreaming] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Chat information
+  const [chatName, setChatName] = useState<string>("");
+  const [folderId, setFolderId] = useState<string>("");
+  const [tags, setTags] = useState<string[]>([]);
 
   // Utility function to scroll to the bottom of the chat
   const scrollToBottom = (): void => {
@@ -74,13 +82,21 @@ const ExistingChat: React.FC = () => {
   
         if (response.ok) {
           const data: ChatResponse = await response.json();
+
           const loadedMessages: Message[] = data.messages.map((m: Message) => ({
             id: m.id,
             text: m.text,
             sender: m.sender,
             timestamp: new Date(m.timestamp),
           }));
+          const folderId = data.folderId;
+          const chatName = data.chatName;
+          const tags = data.tags;
+
           setMessages(loadedMessages);
+          setFolderId(folderId);
+          setChatName(chatName);
+          setTags(tags);
         } else {
           console.error("Failed to fetch chat");
         }
@@ -333,12 +349,21 @@ const ExistingChat: React.FC = () => {
     <div className="min-h-screen flex flex-row justify-between p-4 space-x-4 pt-20">
       {/* Left Panel */}
       <div className="hidden lg:block lg:w-1/6 sm:p-4 sm:pt-14 sm:pb-22 md:pb-28">
-        <Link
-          href="/chats"
-          className="px-4 py-3 rounded-md text-sm font-medium text-gray-800 hover:bg-indigo-400 dark:text-gray-100 dark:bg-transparent dark:hover:bg-indigo-900"
-        >
-          <span className="mr-1">{"⬅"}</span> Go to Chats
-        </Link>
+        {folderId ? (
+          <Link
+            href={`/chats/folders/${folderId}`}
+            className="px-4 py-3 rounded-md text-sm font-medium text-gray-800 hover:bg-indigo-400 dark:text-gray-100 dark:bg-transparent dark:hover:bg-indigo-900"
+          >
+            <span className="mr-1">{"⬅"}</span> Go to Folder
+          </Link>
+        ) : (
+          <Link
+            href="/chats"
+            className="px-4 py-3 rounded-md text-sm font-medium text-gray-800 hover:bg-indigo-400 dark:text-gray-100 dark:bg-transparent dark:hover:bg-indigo-900"
+          >
+            <span className="mr-1">{"⬅"}</span> Go to Chats
+          </Link>
+        )}
       </div>
 
       {/* Center (Chat) Panel */}
