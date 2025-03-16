@@ -25,6 +25,27 @@ export const getChat = async (req, res) => {
   }
 };
 
+export const getChats = async (req, res) => {
+  try {
+    const { username, folderId } = req.query;
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+    let query = { username };
+    if (folderId) {
+      if (folderId === 'none') {
+        query.$or = [{ folderId: { $exists: false } }, { folderId: "" }];
+      } else {
+        query.folderId = folderId;
+      }
+    }
+    const chats = await Chat.find(query);
+    res.json(chats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const updateChatMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
