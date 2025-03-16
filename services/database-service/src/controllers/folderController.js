@@ -12,6 +12,19 @@ export const createFolder = async (req, res) => {
   }
 };
 
+export const getFolder = async (req, res) => {
+  try {
+    const { folderId } = req.params;
+    if (!folderId) {
+      return res.status(400).json({ error: "Folder ID query parameter required" });
+    }
+    const folders = await Folder.findOne({ folderId });
+    return res.status(200).json(folders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getFolders = async (req, res) => {
   try {
     const { username } = req.query;
