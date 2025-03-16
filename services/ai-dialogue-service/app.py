@@ -115,6 +115,8 @@ async def chat_handler(payload: dict):
         8. **Error Handling**: If a query is ambiguous or unclear, ask for clarification rather than providing a potentially incorrect answer.
         9. **Fallback Options**: If the required information is not available in the provided context, provide a polite and helpful response. Example: "I don't have that information right now." or "I'm sorry, but I don't have that information. Is there something else I can help with?"
         10. **Context Availability**: If the context is empty, do not provide answers based solely on internal knowledge. Instead, respond appropriately by indicating the lack of information.
+        11. **Respond in Markdown**: Format your responses in markdown language for clarity. Do not wrap the response in markdown.
+        12. **Avoid replying with 'According to the provided context' or 'Based on the information provided'**: Respond directly to the user's query without this phrase.
 
 
         **IMPORTANT** : DO NOT ANSWER FROM YOUR KNOWLEDGE BASE USE THE BELOW CONTEXT
@@ -146,9 +148,7 @@ async def chat_handler(payload: dict):
     prompt = (
         CHAT_SYSTEM_TEMPLATE.replace("{source}", context) +
         (f"\n\nConversation History:\n{history_text}" if history_text else "") +
-        f"\n\nUser Query:\n{query_text}" + 
-        f"\n\nFormat your responses in markdown language for clarity, without wrapping the response in markdown."
-        f"\n\nDo not say anything like 'According to the provided context' or 'Based on the information provided'. Just provide the answer."
+        f"\n\nUser Query:\n{query_text}"
     )
 
     # Step 5: Forward the prompt to the inference service.
