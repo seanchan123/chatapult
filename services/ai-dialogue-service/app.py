@@ -45,12 +45,12 @@ async def validate_api_key(request: Request, call_next):
 @app.post("/chat")
 async def chat_handler(payload: dict):
     """
-    1. Receives a user query with an optional "stream" flag.
+    1. Receives a user query with an optional "stream" flag and optional "history" (a list of previous messages).
     2. Embeds the query.
     3. Retrieves relevant document chunks from Qdrant.
-    4. Assembles an augmented prompt.
+    4. Assembles an augmented prompt that includes the conversation history if provided.
     5. Forwards the prompt to the ai-inference-service.
-    6. Returns the final LLM response (streaming or non-streaming) formatted in Markdown.
+    6. Returns the final LLM response (streaming or non‑streaming) formatted in Markdown.
     """
     query_text = payload.get("query")
     if not query_text:
@@ -58,29 +58,38 @@ async def chat_handler(payload: dict):
 
     stream_requested = payload.get("stream", False)
 
-    # Step 1: Embed the query (using embed_text, defined below)
+    # Optional: Extract conversation history if provided.
+    # Assume each history message is a dict with at least "sender" and "text" (or "content") keys.
+    history = payload.get("history", [])
+    history_text = ""
+    if history:
+        # Build a history string with one message per line.
+        history_text = "\n".join(
+            f"{msg.get('sender')}: {msg.get('text') or msg.get('content') or ''}"
+            for msg in history
+        )
+
+    # Step 1: Embed the query.
     query_vector = embed_text(query_text)
 
-    # Step 2: Retrieve relevant document chunks from Qdrant
+    # Step 2: Retrieve relevant document chunks from Qdrant.
     try:
         search_results = qdrant_client.query_points(
             collection_name=COLLECTION_NAME,
             query=query_vector,
-            limit=3,  # Adjust as needed
+            limit=3,  # Adjust as needed.
             with_payload=True
         ).points
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error querying Qdrant: {e}")
 
-    # Step 3: Extract context and source information from each ScoredPoint
+    # Step 3: Extract context and source information from Qdrant results.
     context_chunks = []
     sources = set()
     for point in search_results:
-        # Retrieve text content from the payload (check "page_content")
         text = point.payload.get("page_content", "")
         if text:
             context_chunks.append(text)
-        # Retrieve source information from the metadata subfield, if available
         metadata = point.payload.get("metadata", {})
         src = metadata.get("source", "")
         if src:
@@ -89,8 +98,10 @@ async def chat_handler(payload: dict):
     sources_str = ", ".join(sorted(sources)) if sources else "Unknown"
 
     # Step 4: Assemble the augmented prompt.
+    # If history_text exists, prepend it to the prompt.
     prompt = (
-        f"Answer the following question using only the provided context. "
+        (f"Conversation History:\n{history_text}\n\n" if history_text else "") +
+        f"Answer the following question using only the provided context if relevant. "
         f"Question: \"{query_text}\"\n\n"
         f"Context:\n{context}\n\n"
         "Respond thoroughly and accurately, but do not include any greetings or extra commentary."
@@ -99,10 +110,9 @@ async def chat_handler(payload: dict):
     # Step 5: Forward the prompt to the inference service.
     raw_response = await call_inference_service(prompt, stream=stream_requested)
 
-    # Step 6: For non-streaming responses, post-process the output to wrap it in Markdown,
-    # including a footer with the sources.
+    # Step 6: For non-streaming responses, wrap the output in Markdown with a footer for sources.
     if stream_requested:
-        return raw_response  # StreamingResponse returned as-is.
+        return raw_response  # The streaming response is already a StreamingResponse.
     else:
         final_markdown = (
             f"## Answer\n\n"

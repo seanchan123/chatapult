@@ -59,7 +59,6 @@ const ExistingChat: React.FC = () => {
 
   // Fetch the chat conversation from the database.
   useEffect(() => {
-    // Define the async function inside the effect
     const fetchChat = async (): Promise<void> => {
       try {
         const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
@@ -115,30 +114,37 @@ const ExistingChat: React.FC = () => {
     });
   };
 
-  // Streaming response reader
-  const getAIResponseStream = async (query: string): Promise<string> => {
+  // Streaming response call
+  const getAIResponseStream = async (
+    query: string,
+    history: Message[]
+  ): Promise<string> => {
     const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
     if (!url) throw new Error("AI Dialogue Service URL not defined in env");
-  
+
     const response = await fetch(url + "/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_API_KEY}`,
       },
-      body: JSON.stringify({ query, stream: true }),
+      body: JSON.stringify({
+        query,
+        history: history.map((m) => ({ sender: m.sender, text: m.text })),
+        stream: true,
+      }),
     });
     if (!response.ok) {
       throw new Error(`Streaming request failed with status ${response.status}`);
     }
-  
+
     const reader = response.body?.getReader();
     if (!reader) throw new Error("ReadableStream not supported");
     const decoder = new TextDecoder("utf-8");
     let done = false;
     let accumulated = "";
     let buffer = "";
-  
+
     while (!done) {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
@@ -188,7 +194,10 @@ const ExistingChat: React.FC = () => {
   };
 
   // Non-streaming response call
-  const getAIResponse = async (query: string): Promise<string> => {
+  const getAIResponse = async (
+    query: string,
+    history: Message[]
+  ): Promise<string> => {
     const url = process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_URL;
     if (!url) throw new Error("AI Dialogue Service URL not defined in env");
 
@@ -198,7 +207,11 @@ const ExistingChat: React.FC = () => {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${process.env.NEXT_PUBLIC_AI_DIALOGUE_SERVICE_API_KEY}`,
       },
-      body: JSON.stringify({ query, stream: false }),
+      body: JSON.stringify({
+        query,
+        history: history.map((m) => ({ sender: m.sender, text: m.text })),
+        stream: false,
+      }),
     });
     if (!response.ok) {
       throw new Error(`Request failed with status ${response.status}`);
@@ -271,9 +284,9 @@ const ExistingChat: React.FC = () => {
     try {
       let finalResponse = "";
       if (!streaming) {
-        finalResponse = await getAIResponse(userQuery);
+        finalResponse = await getAIResponse(userQuery, updatedAfterUser);
       } else {
-        finalResponse = await getAIResponseStream(userQuery);
+        finalResponse = await getAIResponseStream(userQuery, updatedAfterUser);
       }
       // Build final conversation array using the final response.
       const finalConversation = [
