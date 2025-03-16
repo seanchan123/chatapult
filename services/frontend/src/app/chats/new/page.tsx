@@ -184,6 +184,7 @@ const NewChat: React.FC = () => {
       folderId: folderId || "",
       chatName: `Chat (${currentTimestamp})`,
       chatId,
+      tags: [],
       messages: conversation.map((m) => ({
         ...m,
         timestamp: m.timestamp.toISOString(),

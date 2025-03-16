@@ -414,9 +414,12 @@ const ExistingChat: React.FC = () => {
     if (e.key === "Enter" || e.key === " " || e.key === ",") {
       e.preventDefault();
       const trimmed = tagInput.trim();
-      if (trimmed && !editTags.includes(trimmed)) {
-        setEditTags((prev) => [...prev, trimmed]);
-      }
+      if (!trimmed) return; // Do nothing if empty
+  
+      setEditTags((prev) => {
+        const currentTags = Array.isArray(prev) ? prev : [];
+        return currentTags.includes(trimmed) ? currentTags : [...currentTags, trimmed];
+      });
       setTagInput("");
     }
   };
@@ -628,9 +631,9 @@ const ExistingChat: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
                   Tags
                 </label>
-                <div className="flex flex-wrap gap-2 mb-2">
+                <div className="flex flex-wrap gap-2 mb-0">
                   {editTags && editTags.map((tag, index) => (
-                    <span key={`${tag}-${index}`} className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-md">
+                    <span key={`${tag}-${index}`} className="bg-indigo-600 text-white text-xs px-3 py-1 mb-2 rounded-md">
                       {tag}
                     </span>
                   ))}
