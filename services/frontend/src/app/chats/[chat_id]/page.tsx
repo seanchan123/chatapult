@@ -633,7 +633,7 @@ const ExistingChat: React.FC = () => {
                   }}
                   className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
                 >
-                  <option className="italic" value="none">None</option>
+                  <option className="italic" value="">None</option>
                   {folders.map((folder) => (
                     <option key={folder.folderId} value={folder.folderId}>
                       {folder.folderName}
