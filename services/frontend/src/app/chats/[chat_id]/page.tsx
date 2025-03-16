@@ -424,6 +424,10 @@ const ExistingChat: React.FC = () => {
     }
   };
 
+  const handleTagDelete = (tagToDelete: string) => {
+    setEditTags((prev) => prev.filter((tag) => tag !== tagToDelete));
+  };
+
   const handleModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let finalFolderId = selectedFolder;
@@ -631,9 +635,13 @@ const ExistingChat: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
                   Tags
                 </label>
-                <div className="flex flex-wrap gap-2 mb-0">
+                <div className="flex flex-wrap gap-2">
                   {editTags && editTags.map((tag, index) => (
-                    <span key={`${tag}-${index}`} className="bg-indigo-600 text-white text-xs px-3 py-1 mb-2 rounded-md">
+                    <span
+                      key={`${tag}-${index}`}
+                      className="bg-indigo-600 text-white text-xs px-3 py-2 rounded-md cursor-pointer"
+                      onClick={() => handleTagDelete(tag)}
+                    >
                       {tag}
                     </span>
                   ))}
@@ -644,7 +652,7 @@ const ExistingChat: React.FC = () => {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagKeyDown}
                   placeholder="Type tag and press space, comma, or Enter"
-                  className="w-full px-4 py-2 border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200"
+                  className={`w-full px-4 py-2 ${editTags.length > 0 ? ("mt-3") : ("mt-0")} border rounded-md shadow-md focus:outline-none focus:ring focus:border-indigo-500 dark:bg-gray-200`}
                 />
               </div>
               <button
