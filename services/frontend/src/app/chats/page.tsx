@@ -43,7 +43,7 @@ const ChatsPage: React.FC = () => {
           const url = process.env.NEXT_PUBLIC_DATABASE_SERVICE_URL;
           if (!url) throw new Error("Database Service URL not defined in env");
           const response = await fetch(
-            `${url}/api/chats?username=${user?.username}`,
+            `${url}/api/chats?username=${user?.username}&folderId=none`,
             {
               method: "GET",
               headers: {
