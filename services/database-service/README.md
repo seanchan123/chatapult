@@ -1,130 +1,189 @@
 # Database Service
 
-The Database Service is a core microservice in the Chatapult project. It is responsible for managing and storing application data, including user chat histories and associated metadata. This service leverages `MongoDB` as the data store and uses `Mongoose` for data modeling and interaction.
+The **Database Service** manages storage and retrieval of chats, folders, and related data for the Chatapult project. It uses **Express**, **MongoDB**, and **JWT-based** authentication middleware to protect routes.
 
 ## Overview
 
-- **Purpose:**  
-  Provide a centralized, scalable data store for the Chatapult system, handling operations such as creating, reading, updating, and deleting chat conversations and related records.
-- **Technology Stack:**  
-  - **Backend:** Express, Node.js (JavaScript)  
-  - **Database:** MongoDB (using Mongoose for ODM)  
-  - **Environment Management:** dotenv  
-- **Project Structure:**  
-  The service is organized into modular directories for configuration, models, controllers, routes, and middleware to keep the code maintainable and scalable.
-
-## Prerequisites
-
-- **Node.js:** Install Node.js (v14 or higher) from [nodejs.org](https://nodejs.org).
-- **MongoDB:**  
-  - For local development, ensure you have a MongoDB instance running locally.
-  - For cloud deployments, use a connection string for your hosted MongoDB (e.g., MongoDB Atlas).  
-  **Note:** To explicitly create/use the `Chatapult` database, include the database name in your connection string.
-
-- **Environment Variables:**  
-  Create a `.env` file in the project root with the following variables:
-  
-  ```env
-  PORT=5000
-  MONGODB_URI=mongodb+srv://<username>:<password>@chatapult.tjn3e.mongodb.net/Chatapult?retryWrites=true&w=majority
-  ```
-  
-  This connection string explicitly uses the `Chatapult` database.
+- **Technology Stack**  
+  - **Backend**: Node.js, Express  
+  - **Database**: MongoDB (via Mongoose)  
+  - **Security**: JWT-based route protection  
+- **Purpose**  
+  - Store and retrieve user chats (including messages, tags, etc.)  
+  - Organize chats into folders  
+  - Provide secure CRUD operations for chat and folder data  
 
 ## Folder Structure
 
 ```
-database-service/
-├── package.json
-├── .env
-└── src/
-    ├── config/
-    │   └── db.js            # MongoDB connection logic
-    ├── controllers/
-    │   └── chatController.js  # Chat operations logic
-    ├── middlewares/
-    │   └── authMiddleware.js  # Route protection middleware
-    ├── models/
-    │   ├── Chat.js          # Chat data model (using Mongoose)
-    ├── routes/
-    │   └── chatRoutes.js    # Routes for chat operations
-    └── app.js               # Main Express application
+database-service
+├─ node_modules
+├─ src
+│  ├─ config
+│  │  └─ db.js             # Connects to MongoDB
+│  ├─ controllers
+│  │  ├─ chatController.js   # CRUD for Chat model
+│  │  └─ folderController.js # CRUD for Folder model
+│  ├─ middlewares
+│  │  └─ authMiddleware.js   # Verifies JWT tokens
+│  ├─ models
+│  │  ├─ Chat.js             # Mongoose schema for chats
+│  │  └─ Folder.js           # Mongoose schema for folders
+│  ├─ routes
+│  │  ├─ chatRoutes.js       # /api/chats endpoints
+│  │  └─ folderRoutes.js     # /api/folders endpoints
+│  └─ app.js                 # Main Express server
+├─ .env
+├─ package-lock.json
+├─ package.json
+└─ README.md  (this file)
 ```
 
-## Installation and Setup
+## Prerequisites
 
-1. **Clone the Repository & Navigate to the Service Folder:**
+1. **Node.js** (v14+ recommended)  
+2. **MongoDB** (local or remote)
 
+## Installation
+
+1. **Clone/Download the Repository**  
+   Make sure you have the `database-service` folder locally.
+
+2. **Install Dependencies**  
    ```bash
-   cd services/database-service
-   ```
-
-2. **Install Dependencies:**
-
-   ```bash
+   cd database-service
    npm install
    ```
 
-3. **Configure Environment Variables:**
-
-   Create a `.env` file in the project root with your `MongoDB` connection string and desired `PORT`, as shown above.
-
-4. **Run the Service:**
-
-   For development, run:
+3. **Configure Environment Variables**  
+   Create or update your `.env` file in the `database-service` folder with:
 
    ```bash
-   npm run dev
+   MONGODB_URI=mongodb://<username>:<password>@<host>:<port>/<database>
+   JWT_SECRET=some_long_secret_string
+   PORT=5000
    ```
+   - **MONGODB_URI**: Connection string for your MongoDB instance  
+   - **JWT_SECRET**: Used to verify incoming JWT tokens from other services or front-end  
+   - **PORT**: The port on which the service will run (default: `5000`)
 
-   This command executes `node src/app.js` and starts the service on the specified port (default is 5000).
+## Running the Service
 
-## Database Initialization
+```bash
+npm run start
+```
 
-- When the service starts, it connects to the `MongoDB` instance using the connection string defined in `.env`.  
-- **Automatic Database Creation:**  
-  `MongoDB` automatically creates the database (named `Chatapult` in this case) and any collections when you first write data.
+or (for local development with automatic restarts):
+
+```bash
+npm run dev
+```
+
+**Output**:  
+You should see console logs indicating a successful MongoDB connection and that the service is running on your configured port.
+
+## Endpoints
+
+All endpoints require a valid JWT token in the `Authorization` header, for example:
+```
+Authorization: Bearer <jwt_token>
+```
+If the token is missing or invalid, the service returns a `401 Unauthorized` error.
+
+### Chat Endpoints
+
+**Route Prefix**: `/api/chats`
+
+1. **GET `/api/chats`**  
+   - **Query Params**: `username`, optional `folderId`  
+   - **Behavior**: Retrieves all chats for the specified `username`. If `folderId=none`, it returns chats with no folder.  
+   - **Protected**: Yes (JWT required)
+
+2. **GET `/api/chats/:chatId`**  
+   - **Params**: `chatId`  
+   - **Behavior**: Returns the chat document matching `chatId`.  
+   - **Protected**: Yes
+
+3. **POST `/api/chats`**  
+   - **Body**: `{ username, folderId, chatId, chatName, messages, tags }`  
+   - **Behavior**: Creates a new chat document.  
+   - **Protected**: Yes
+
+4. **PUT `/api/chats/:chatId`**  
+   - **Params**: `chatId`  
+   - **Body**: `{ chatName, folderId, tags }`  
+   - **Behavior**: Updates chat metadata (name, folder, tags).  
+   - **Protected**: Yes
+
+5. **PUT `/api/chats/:chatId/messages`**  
+   - **Params**: `chatId`  
+   - **Body**: `{ messages }`  
+   - **Behavior**: Replaces the messages array for the chat.  
+   - **Protected**: Yes
+
+6. **DELETE `/api/chats/:chatId`**  
+   - **Params**: `chatId`  
+   - **Behavior**: Deletes the specified chat.  
+   - **Protected**: Yes
+
+### Folder Endpoints
+
+**Route Prefix**: `/api/folders`
+
+1. **POST `/api/folders`**  
+   - **Body**: `{ folderId, folderName, username }`  
+   - **Behavior**: Creates a new folder document.  
+   - **Protected**: Yes
+
+2. **GET `/api/folders`**  
+   - **Query Param**: `username`  
+   - **Behavior**: Returns all folders belonging to the specified username.  
+   - **Protected**: Yes
+
+3. **GET `/api/folders/:folderId`**  
+   - **Params**: `folderId`  
+   - **Behavior**: Returns the folder with the given folderId.  
+   - **Protected**: Yes
+
+4. **PUT `/api/folders/:folderId`**  
+   - **Params**: `folderId`  
+   - **Body**: `{ folderName }`  
+   - **Behavior**: Updates the folder name.  
+   - **Protected**: Yes
+
+5. **DELETE `/api/folders/:folderId`**  
+   - **Params**: `folderId`  
+   - **Behavior**: Deletes the folder and all associated chats.  
+   - **Protected**: Yes
+
+## JWT Authentication
+
+- The service expects a JWT token in the `Authorization` header (e.g., `Bearer <token>`).  
+- Tokens are verified using `JWT_SECRET`.  
+- If the token is invalid or missing, the request is denied with a 401 response.
 
 ## Logging
 
-The service includes basic logging for each incoming request and outgoing response:
-- **Request Logging:** Logs the HTTP method and URL for each request.
-- **Response Logging:** Logs minimal details of responses sent back to the client.
+- **morgan** is used to log all incoming HTTP requests to the console.  
+- Errors are logged to the console and returned as JSON via the Express global error handler.
 
-This lightweight logging helps with debugging and monitoring without overwhelming the log files.
+## CORS Configuration
 
-## API Endpoints
+In `app.js`, `cors` is configured to allow requests from `http://localhost:3000` with credentials. Modify or extend the origin list as needed for your environment.
 
-- **Chat Endpoints:**  
-  - `POST /api/chats` – Create a new chat conversation.
-  - `GET /api/chats/:chatId` – Retrieve a specific chat conversation.
+## Integration with Other Services
 
-## Testing
+- Typically called by your front-end or other microservices (e.g., the **Next.js** UI or **Auth Service**) to manage user chats and folders.
+- The **Auth Service** issues JWT tokens, which are used here for route protection.
 
-Use tools like Postman or cURL to send requests to your endpoints.
+## Troubleshooting
 
-### Example Requests
-
-1. **Create a Chat Conversation:**
-    
-    ```bash
-    curl -X POST http://localhost:5000/api/chats \
-        -H "Content-Type: application/json" \
-        -d '{
-        "username": "user123",
-        "folderId": "folderA",
-        "chatId": "chat001",
-        "messages": [
-            { "sender": "user", "text": "Hello, world!", "timestamp": "2024-03-01T12:00:00Z" }
-        ]
-        }'
-    ```
-
-2. **Retrieve a Chat Conversation:**
-  
-    ```bash
-    curl -X GET http://localhost:5000/api/chats/chat001
-    ```
+1. **MongoDB Connection Error**  
+   - Ensure `MONGODB_URI` is correct and MongoDB is running/accessible.
+2. **JWT Verification Error**  
+   - Check that `JWT_SECRET` matches the secret used by your Auth Service if tokens are shared.
+3. **CORS Issues**  
+   - Adjust `cors` options in `app.js` to match your client’s domain(s).
 
 ## Running in Production
 
