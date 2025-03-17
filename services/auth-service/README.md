@@ -136,7 +136,7 @@ All endpoints are prefixed with `/api/auth` by default.
 
 ## Token Usage
 
-Upon receiving a token from `register` or `login`, the client (e.g., your front-end or another service) can store it (often in local storage, cookies, or an in-memory store) and attach it as needed to subsequent requests to other services that require authentication.
+Upon receiving a token from `register` or `login`, the client can store it (often in local storage, cookies, or an in-memory store) and attach it as needed to subsequent requests to other services that require authentication.
 
 ## Logging
 
@@ -149,7 +149,7 @@ In `app.js`, `cors` is configured to allow requests from `http://localhost:3000`
 
 ## Integration with Other Services
 
-- Typically used by your **Next.js** front-end or other microservices in the Chatapult project to authenticate users and manage sessions.
+- Used with the `frontend` service in the Chatapult project to authenticate users and manage sessions.
 - Other services can rely on the JWT token from this Auth Service to authorize user requests.
 
 ## Troubleshooting
