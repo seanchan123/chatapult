@@ -35,7 +35,7 @@ const RegisterPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         const { token } = data;
-        login(token); // Pass the JWT token to the login function
+        login(token, username); // Pass the JWT token to the login function
       } else {
         setError("Registration failed. Please try again.");
       }
