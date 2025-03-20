@@ -46,9 +46,6 @@ venv/
 
 # Docker related
 *.container
-docker-compose.override.yml
-.dockerignore
-Dockerfile
 
 # General Ignore for build and dependency files
 build/
