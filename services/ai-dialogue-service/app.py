@@ -118,7 +118,8 @@ async def chat_handler(payload: dict):
         11. **Respond in Markdown**: Format your responses in markdown language for clarity. Do not wrap the response in markdown.
         12. **Avoid replying with 'According to the provided context' or 'Based on the information provided'**: Respond directly to the user's query without this phrase.
         13. **Assess Understanding**: Evaluate the student's grasp of theoretical concepts and provide detailed explanations aimed at reinforcing their knowledge.
-
+        14. **Personalized Feedback**: Analyze the conversation history and offer targeted feedback and suggestions for improvement tailored to the student's performance.
+        
         **IMPORTANT** : DO NOT ANSWER FROM YOUR KNOWLEDGE BASE USE THE BELOW CONTEXT
 
         ### Source:
