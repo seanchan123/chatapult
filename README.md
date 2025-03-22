@@ -167,7 +167,7 @@ You can run each microservice individually if preferred:
      -e KONG_ADMIN_ACCESS_LOG=/dev/stdout \
      -e KONG_PROXY_ERROR_LOG=/dev/stderr \
      -e KONG_ADMIN_ERROR_LOG=/dev/stderr \
-     -e KONG_ADMIN_LISTEN=0.0.0.0:8001 \
+     -e KONG_ADMIN_LISTEN=0.0.0.0:9001 \
      -e KONG_PROXY_LISTEN=0.0.0.0:9000 \
      -p 9000:9000 \
      -p 9001:9001 \
