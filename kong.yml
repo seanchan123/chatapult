@@ -1,0 +1,35 @@
+_format_version: "2.1"
+services:
+  - name: ai-dialogue-service
+    url: http://ai-dialogue-service:8000
+    routes:
+      - name: dialogue
+        paths:
+          - /dialogue
+  - name: ai-inference-service
+    url: http://ai-inference-service:8080
+    routes:
+      - name: inference
+        paths:
+          - /inference
+  - name: auth-service
+    url: http://auth-service:4000
+    routes:
+      - name: auth
+        paths:
+          - /auth
+  - name: database-service
+    url: http://database-service:5000
+    routes:
+      - name: chats
+        paths:
+          - /database/chats
+      - name: folders
+        paths:
+          - /database/folders
+  - name: qdrant
+    url: http://qdrant:6333
+    routes:
+      - name: qdrant
+        paths:
+          - /qdrant
