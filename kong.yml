@@ -21,12 +21,9 @@ services:
   - name: database-service
     url: http://database-service:5000
     routes:
-      - name: chats
+      - name: database
         paths:
-          - /database/chats
-      - name: folders
-        paths:
-          - /database/folders
+          - /database
   - name: qdrant
     url: http://qdrant:6333
     routes:
