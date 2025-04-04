@@ -4,6 +4,8 @@
 
 ## Overview
 
+![Chatapult - System Architecture drawio](https://github.com/user-attachments/assets/e9a1890e-7c9f-4783-9943-733ea484364f)
+
 **Chatapult** is built with a modern microservices architecture. The project now includes an API Gateway (powered by Kong) to route requests from the frontend to the underlying services. The project consists of the following services:
 
 - **AI Dialogue Service**  
